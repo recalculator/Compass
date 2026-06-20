@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { requireUser } from '@/lib/auth/requireUser';
 
 export async function POST(request: Request) {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-  }
+  const auth = await requireUser();
+  if ('error' in auth) return auth.error;
+  const { user, supabase } = auth;
 
+  // TODO: migrate to zod
   const body = await request.json();
   const postId = body.post_id as string;
   const parentCommentId = (body.parent_comment_id as string | null) ?? null;

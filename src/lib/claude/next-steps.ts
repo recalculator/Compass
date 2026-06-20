@@ -1,4 +1,5 @@
 import { anthropic, CLAUDE_MODEL } from './client';
+import { extractJsonArray } from './parse';
 import type { ChildProfile, RoadmapItem } from '@/lib/types';
 
 export type NextStepSuggestion = {
@@ -6,13 +7,6 @@ export type NextStepSuggestion = {
   description: string;
   urgency: 'now' | 'soon' | 'upcoming';
 };
-
-function extractJsonArray<T>(text: string): T {
-  const start = text.indexOf('[');
-  const end = text.lastIndexOf(']');
-  if (start === -1 || end === -1) throw new Error('Claude did not return a JSON array');
-  return JSON.parse(text.slice(start, end + 1)) as T;
-}
 
 function ageFromBirthDate(birthDate: string | null): string {
   if (!birthDate) return 'unknown age';
@@ -58,5 +52,5 @@ Respond with ONLY a JSON array, no preamble, of 3-6 items in this shape:
   const textBlock = message.content.find((block) => block.type === 'text');
   if (!textBlock || textBlock.type !== 'text') throw new Error('No text response from Claude');
 
-  return extractJsonArray<NextStepSuggestion[]>(textBlock.text);
+  return extractJsonArray<NextStepSuggestion>(textBlock.text);
 }

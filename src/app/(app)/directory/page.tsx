@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { getCurrentChild } from '@/lib/child/getCurrentChild';
 import type { Specialist, SpecialtyType } from '@/lib/types';
 import { SpecialistCard } from '@/components/directory/SpecialistCard';
 
@@ -20,17 +21,8 @@ export default async function DirectoryPage({
   searchParams: { zip?: string; type?: string; telehealth?: string; insurance?: string };
 }) {
   const supabase = createClient();
-
-  const { data: profile } = await (async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    return supabase
-      .from('child_profiles')
-      .select('location_zip')
-      .eq('user_id', user!.id)
-      .order('created_at', { ascending: true })
-      .limit(1)
-      .maybeSingle();
-  })();
+  const { data: { user } } = await supabase.auth.getUser();
+  const profile = await getCurrentChild(supabase, user!.id);
 
   const zip = searchParams.zip ?? profile?.location_zip ?? '';
   const type = searchParams.type ?? '';

@@ -1,4 +1,5 @@
 import { anthropic, CLAUDE_MODEL } from './client';
+import { extractJson } from './parse';
 import type { ChildProfile, RoadmapItem } from '@/lib/types';
 
 export type DigestContent = {
@@ -9,13 +10,6 @@ export type DigestContent = {
   trending_post: { title: string; excerpt: string } | null;
   closing_line: string;
 };
-
-function extractJson<T>(text: string): T {
-  const start = text.indexOf('{');
-  const end = text.lastIndexOf('}');
-  if (start === -1 || end === -1) throw new Error('Claude did not return JSON');
-  return JSON.parse(text.slice(start, end + 1)) as T;
-}
 
 export async function generateDigestContent(params: {
   parentName: string;

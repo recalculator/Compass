@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { getCurrentChild } from '@/lib/child/getCurrentChild';
 import { generateDigestContent } from '@/lib/claude/digest';
 import { buildDigestEmailHtml } from '@/lib/email/template';
 import type { ChildProfile, RoadmapItem } from '@/lib/types';
@@ -15,17 +16,17 @@ async function getTrendingPost(supabase: SupabaseClient) {
     .order('created_at', { ascending: false })
     .limit(25);
 
-  type PostRow = { title: string; body: string; comments: { count: number }[] };
+  type PostRow = { id: string; title: string; body: string; comments: { count: number }[] };
   const rows = (recentPosts ?? []) as unknown as PostRow[];
 
   if (rows.length === 0) {
     const { data: fallback } = await supabase
       .from('community_posts')
-      .select('title, body')
+      .select('id, title, body')
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
-    return fallback ? { title: fallback.title, body: fallback.body } : null;
+    return fallback ? { id: fallback.id, title: fallback.title, body: fallback.body } : null;
   }
 
   const top = rows.reduce((best, row) => {
@@ -34,20 +35,14 @@ async function getTrendingPost(supabase: SupabaseClient) {
     return count > bestCount ? row : best;
   }, rows[0]);
 
-  return { title: top.title, body: top.body };
+  return { id: top.id, title: top.title, body: top.body };
 }
 
 export async function buildDigestForUser(
   supabase: SupabaseClient,
   user: { id: string; email: string; full_name: string | null }
 ): Promise<{ subject: string; html: string; to: string } | null> {
-  const { data: profile } = await supabase
-    .from('child_profiles')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: true })
-    .limit(1)
-    .maybeSingle();
+  const profile = await getCurrentChild(supabase, user.id);
 
   if (!profile) return null;
 
@@ -87,7 +82,7 @@ export async function buildDigestForUser(
     today,
   });
 
-  const html = buildDigestEmailHtml(content, profile.child_name);
+  const html = buildDigestEmailHtml(content, profile.child_name, trendingPost?.id ?? null);
   const subject = `This week for ${profile.child_name} 🧭`;
 
   return { subject, html, to: user.email };

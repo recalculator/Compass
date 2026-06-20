@@ -17,7 +17,14 @@ function row(label: string, value: string): string {
     </tr>`;
 }
 
-export function buildDigestEmailHtml(content: DigestContent, childName: string): string {
+export function buildDigestEmailHtml(
+  content: DigestContent,
+  childName: string,
+  trendingPostId: string | null = null
+): string {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const settingsHref = `${baseUrl}/dashboard/settings`;
+
   const appointmentsHtml = content.appointments.length
     ? content.appointments.map((a) => row(a.date, a.title)).join('')
     : `<tr><td style="padding:6px 0;font-size:14px;color:#8a978b;">Nothing dated on the calendar this week.</td></tr>`;
@@ -28,6 +35,10 @@ export function buildDigestEmailHtml(content: DigestContent, childName: string):
         .join('')
     : `<tr><td style="padding:6px 0;font-size:14px;color:#8a978b;">No IEP deadlines in the next 30 days.</td></tr>`;
 
+  const trendingPostHref = content.trending_post && trendingPostId
+    ? `${baseUrl}/village/${trendingPostId}`
+    : null;
+
   const trendingHtml = content.trending_post
     ? `
       <tr>
@@ -35,6 +46,7 @@ export function buildDigestEmailHtml(content: DigestContent, childName: string):
           <p style="margin:0 0 4px;font-size:13px;color:#3a6e96;font-weight:700;">FROM THE VILLAGE</p>
           <p style="margin:0 0 4px;font-size:15px;color:#2d3e2f;font-weight:700;">${escapeHtml(content.trending_post.title)}</p>
           <p style="margin:0;font-size:14px;color:#3f5a42;">${escapeHtml(content.trending_post.excerpt)}</p>
+          ${trendingPostHref ? `<p style="margin:8px 0 0;font-size:13px;"><a href="${trendingPostHref}" style="color:#3a6e96;font-weight:700;">Read it in the Village →</a></p>` : ''}
         </td>
       </tr>`
     : '';
@@ -90,7 +102,8 @@ export function buildDigestEmailHtml(content: DigestContent, childName: string):
             <tr>
               <td style="padding:16px 28px;background-color:#f4f7f4;text-align:center;">
                 <p style="margin:0;font-size:11px;color:#8a978b;">
-                  You're getting this because weekly digests are turned on in your Compass settings.
+                  You're getting this because weekly digests are turned on in your
+                  <a href="${settingsHref}" style="color:#8a978b;">Compass settings</a>.
                 </p>
               </td>
             </tr>

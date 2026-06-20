@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { Map, Search, Users, FileCheck, HandCoins } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
-import type { ChildProfile, MilestoneAlert } from '@/lib/types';
+import { getCurrentChild } from '@/lib/child/getCurrentChild';
+import type { MilestoneAlert } from '@/lib/types';
 import { ComingUp } from '@/components/dashboard/ComingUp';
 
 const QUICK_LINKS = [
@@ -16,13 +17,7 @@ export default async function DashboardPage() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const { data: profile } = await supabase
-    .from('child_profiles')
-    .select('*')
-    .eq('user_id', user!.id)
-    .order('created_at', { ascending: true })
-    .limit(1)
-    .maybeSingle();
+  const profile = await getCurrentChild(supabase, user!.id);
 
   const nowIso = new Date().toISOString();
 
@@ -36,7 +31,7 @@ export default async function DashboardPage() {
   return (
     <div className="mx-auto max-w-3xl px-6 py-10">
       <h1 className="text-2xl font-bold text-sage-900">
-        Welcome back{(profile as ChildProfile)?.child_name ? `, navigating for ${(profile as ChildProfile).child_name}` : ''}
+        Welcome back{profile?.child_name ? `, navigating for ${profile.child_name}` : ''}
       </h1>
       <p className="mt-1 text-sm text-sage-600">
         Here&apos;s what Compass is tracking for you this week.

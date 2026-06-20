@@ -1,5 +1,6 @@
 import { Download } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
+import { getCurrentChild } from '@/lib/child/getCurrentChild';
 import type { ChildProfile, RoadmapItem } from '@/lib/types';
 import { UploadForm } from './UploadForm';
 import { Timeline } from './Timeline';
@@ -9,13 +10,7 @@ export default async function RoadmapPage() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const { data: profile } = await supabase
-    .from('child_profiles')
-    .select('*')
-    .eq('user_id', user!.id)
-    .order('created_at', { ascending: true })
-    .limit(1)
-    .maybeSingle();
+  const profile = await getCurrentChild(supabase, user!.id);
 
   const { data: roadmapItems } = await supabase
     .from('roadmap_items')

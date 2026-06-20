@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { getCurrentChild } from '@/lib/child/getCurrentChild';
 import { Sidebar } from '@/components/nav/Sidebar';
 
 export default async function AppLayout({
@@ -14,13 +15,7 @@ export default async function AppLayout({
     redirect('/login');
   }
 
-  const { data: profile } = await supabase
-    .from('child_profiles')
-    .select('child_name')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: true })
-    .limit(1)
-    .maybeSingle();
+  const profile = await getCurrentChild(supabase, user.id);
 
   if (!profile) {
     redirect('/onboarding');

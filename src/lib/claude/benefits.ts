@@ -1,12 +1,6 @@
 import { anthropic, CLAUDE_MODEL } from './client';
+import { extractJsonArray } from './parse';
 import type { BenefitProgram } from '@/lib/types';
-
-function extractJsonArray<T>(text: string): T {
-  const start = text.indexOf('[');
-  const end = text.lastIndexOf(']');
-  if (start === -1 || end === -1) throw new Error('Claude did not return a JSON array');
-  return JSON.parse(text.slice(start, end + 1)) as T;
-}
 
 const SYSTEM_PROMPT = `You are a benefits navigator for parents of autistic and special needs children in the United States. You know state Medicaid HCBS waiver programs, Regional Center / DD agency systems, SSI, ABLE accounts, state grant programs, tax credits, and respite care funding. Be specific to the requested state where you can, and clearly generic/federal where state-specific detail isn't reliably knowable. Never invent a program name that you are not reasonably confident exists — if uncertain, describe the general federal program (e.g. SSI, ABLE) rather than fabricating a state-specific one.
 
@@ -48,5 +42,5 @@ export async function generateBenefits(params: { state: string }): Promise<Benef
   const textBlock = message.content.find((block) => block.type === 'text');
   if (!textBlock || textBlock.type !== 'text') throw new Error('No text response from Claude');
 
-  return extractJsonArray<BenefitProgram[]>(textBlock.text);
+  return extractJsonArray<BenefitProgram>(textBlock.text);
 }

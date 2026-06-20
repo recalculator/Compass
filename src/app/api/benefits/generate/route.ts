@@ -1,21 +1,25 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { z } from 'zod';
+import { requireUser } from '@/lib/auth/requireUser';
 import { generateBenefits } from '@/lib/claude/benefits';
 import { US_STATES } from '@/lib/us-states';
 
+const generateSchema = z.object({
+  state: z.enum(US_STATES, { message: 'Please select a valid US state.' }),
+});
+
 export async function POST(request: Request) {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-  }
+  const auth = await requireUser();
+  if ('error' in auth) return auth.error;
 
   const body = await request.json();
-  const state = body.state as string;
+  const parsed = generateSchema.safeParse(body);
 
-  if (!state || !US_STATES.includes(state as (typeof US_STATES)[number])) {
+  if (!parsed.success) {
     return NextResponse.json({ error: 'Please select a valid US state.' }, { status: 400 });
   }
+
+  const { state } = parsed.data;
 
   try {
     const benefits = await generateBenefits({ state });

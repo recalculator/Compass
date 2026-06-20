@@ -1,14 +1,6 @@
 import { anthropic, CLAUDE_MODEL } from './client';
+import { extractJson } from './parse';
 import type { ExtractedDocumentData } from '@/lib/types';
-
-function extractJson<T>(text: string): T {
-  const start = text.indexOf('{');
-  const end = text.lastIndexOf('}');
-  if (start === -1 || end === -1) {
-    throw new Error('Claude did not return JSON');
-  }
-  return JSON.parse(text.slice(start, end + 1)) as T;
-}
 
 const EXTRACTION_SYSTEM_PROMPT = `You are a careful clinical-document reader helping a parent of a child with autism or other special needs make sense of paperwork (IEPs, evaluations, therapy notes). Read the attached document and extract structured facts. Be conservative: only include what the document actually states. Respond with ONLY a JSON object, no preamble, matching exactly this shape:
 

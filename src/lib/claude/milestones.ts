@@ -1,17 +1,11 @@
 import { anthropic, CLAUDE_MODEL } from './client';
+import { extractJsonArray } from './parse';
 import type { ChildProfile, RoadmapItem } from '@/lib/types';
 
 export type MilestoneAlertSuggestion = {
   alert_text: string;
   due_date: string | null;
 };
-
-function extractJsonArray<T>(text: string): T {
-  const start = text.indexOf('[');
-  const end = text.lastIndexOf(']');
-  if (start === -1 || end === -1) throw new Error('Claude did not return a JSON array');
-  return JSON.parse(text.slice(start, end + 1)) as T;
-}
 
 export async function generateMilestoneAlerts(params: {
   profile: ChildProfile;
@@ -56,5 +50,5 @@ If there isn't enough information to generate a meaningful, grounded alert, retu
   const textBlock = message.content.find((block) => block.type === 'text');
   if (!textBlock || textBlock.type !== 'text') throw new Error('No text response from Claude');
 
-  return extractJsonArray<MilestoneAlertSuggestion[]>(textBlock.text);
+  return extractJsonArray<MilestoneAlertSuggestion>(textBlock.text);
 }

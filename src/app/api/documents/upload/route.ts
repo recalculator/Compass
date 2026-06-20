@@ -1,10 +1,21 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { z } from 'zod';
+import { requireUser } from '@/lib/auth/requireUser';
+import { getCurrentChild } from '@/lib/child/getCurrentChild';
 import { extractDocumentData } from '@/lib/claude/extract';
-import type { DocumentType } from '@/lib/types';
 
 const ALLOWED_TYPES = new Set(['application/pdf', 'image/jpeg', 'image/png', 'image/webp']);
 const MAX_BYTES = 20 * 1024 * 1024;
+
+const uploadSchema = z.object({
+  file: z
+    .instanceof(File, { message: 'No file provided' })
+    .refine((f) => ALLOWED_TYPES.has(f.type), {
+      message: 'Unsupported file type. Upload a PDF, JPG, PNG, or WEBP.',
+    })
+    .refine((f) => f.size <= MAX_BYTES, { message: 'File is too large (max 20MB).' }),
+  document_type: z.enum(['iep', 'evaluation', 'therapy_note', 'other']).default('other'),
+});
 
 function dedupeMerge(existing: string[] | null, incoming: string[]) {
   const set = new Set([...(existing ?? []), ...incoming]);
@@ -12,35 +23,28 @@ function dedupeMerge(existing: string[] | null, incoming: string[]) {
 }
 
 export async function POST(request: Request) {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-  }
+  const auth = await requireUser();
+  if ('error' in auth) return auth.error;
+  const { user, supabase } = auth;
 
   const formData = await request.formData();
-  const file = formData.get('file');
-  const documentType = (formData.get('document_type') as DocumentType) || 'other';
+  const parsed = uploadSchema.safeParse({
+    file: formData.get('file'),
+    document_type: formData.get('document_type') ?? undefined,
+  });
 
-  if (!(file instanceof File)) {
-    return NextResponse.json({ error: 'No file provided' }, { status: 400 });
-  }
-  if (!ALLOWED_TYPES.has(file.type)) {
-    return NextResponse.json({ error: 'Unsupported file type. Upload a PDF, JPG, PNG, or WEBP.' }, { status: 400 });
-  }
-  if (file.size > MAX_BYTES) {
-    return NextResponse.json({ error: 'File is too large (max 20MB).' }, { status: 400 });
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? 'Invalid request' },
+      { status: 400 }
+    );
   }
 
-  const { data: profile, error: profileError } = await supabase
-    .from('child_profiles')
-    .select('id, diagnosis, current_services')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: true })
-    .limit(1)
-    .maybeSingle();
+  const { file, document_type: documentType } = parsed.data;
 
-  if (profileError || !profile) {
+  const profile = await getCurrentChild(supabase, user.id);
+
+  if (!profile) {
     return NextResponse.json({ error: 'No child profile found. Finish onboarding first.' }, { status: 400 });
   }
 

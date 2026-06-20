@@ -1,4 +1,5 @@
 import { anthropic, CLAUDE_MODEL } from './client';
+import { extractJson } from './parse';
 
 export type IepSection = {
   section_title: string;
@@ -11,13 +12,6 @@ export type IepAnalysis = {
   sections: IepSection[];
   questions_to_ask: string[];
 };
-
-function extractJson<T>(text: string): T {
-  const start = text.indexOf('{');
-  const end = text.lastIndexOf('}');
-  if (start === -1 || end === -1) throw new Error('Claude did not return JSON');
-  return JSON.parse(text.slice(start, end + 1)) as T;
-}
 
 const SYSTEM_PROMPT = `You are an expert IEP (Individualized Education Program) advocate helping a parent understand their child's IEP document. You know IDEA law, FAPE, LRE, and common pitfalls school districts use that disadvantage students. Read the attached IEP and:
 

@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { requireUser } from '@/lib/auth/requireUser';
 import { buildDigestForUser } from '@/lib/digest/build';
 
 export async function GET() {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-  }
+  const auth = await requireUser();
+  if ('error' in auth) return auth.error;
+  const { user, supabase } = auth;
 
   const { data: userRow } = await supabase
     .from('users')
