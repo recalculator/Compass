@@ -34,6 +34,7 @@ export type ExtractedDocumentData = {
   goals: { area: string; goal: string }[];
   recommendations: string[];
   important_dates: { label: string; date: string }[];
+  location?: { zip?: string; city?: string; state?: string };
 };
 
 export type RoadmapItemType =

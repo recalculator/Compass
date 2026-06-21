@@ -2,17 +2,16 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Map, Search, Users, FileCheck, HandCoins, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Map, Search, Users, HandCoins, Settings, LogOut } from 'lucide-react';
 import clsx from 'clsx';
 import { Logo } from '@/components/ui/Logo';
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/roadmap', label: 'Roadmap', icon: Map },
-  { href: '/directory', label: 'Directory', icon: Search },
+  { href: '/specialists', label: 'Specialists', icon: Search },
+  { href: '/benefits', label: 'Benefit Finder', icon: HandCoins },
   { href: '/village', label: 'Village', icon: Users },
-  { href: '/iep-coach', label: 'IEP Coach', icon: FileCheck },
-  { href: '/dashboard/benefits', label: 'Benefits Finder', icon: HandCoins },
   { href: '/dashboard/settings', label: 'Settings', icon: Settings },
 ];
 

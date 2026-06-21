@@ -22,7 +22,7 @@ create table if not exists public.comparison_results (
 
 create index if not exists comparison_results_pair_id_idx on public.comparison_results (pair_id);
 
--- Same reasoning as 0007_annotation_layer.sql: internal research data with
+-- Same reasoning as 0013_annotation_layer.sql: internal research data with
 -- no owning Compass user, submitted by an anonymous Terac participant.
 -- RLS enabled with no policies — service-role client only.
 alter table public.comparison_pairs enable row level security;

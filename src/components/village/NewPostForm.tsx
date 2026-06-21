@@ -5,18 +5,16 @@ import { useRouter } from 'next/navigation';
 import type { CommunityTopic } from '@/lib/types';
 
 const TOPIC_OPTIONS: { value: CommunityTopic; label: string }[] = [
+  { value: 'general', label: 'General' },
   { value: 'newly_diagnosed', label: 'Newly Diagnosed' },
   { value: 'iep_help', label: 'IEP Help' },
   { value: 'school', label: 'School' },
   { value: 'behavior', label: 'Behavior' },
   { value: 'therapies', label: 'Therapies' },
-  { value: 'general', label: 'General' },
 ];
 
-export function NewPostForm() {
+export function NewPostForm({ authorName }: { authorName?: string }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [topic, setTopic] = useState<CommunityTopic>('general');
   const [submitting, setSubmitting] = useState(false);
@@ -24,20 +22,18 @@ export function NewPostForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!body.trim()) return;
     setSubmitting(true);
     setError(null);
-
     try {
       const res = await fetch('/api/community/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, body, topic }),
+        body: JSON.stringify({ body: body.trim(), topic }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error || 'Could not create post');
-      setTitle('');
+      if (!res.ok) throw new Error(json.error || 'Could not post');
       setBody('');
-      setOpen(false);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
@@ -46,40 +42,42 @@ export function NewPostForm() {
     }
   }
 
-  if (!open) {
-    return (
-      <button onClick={() => setOpen(true)} className="btn-primary w-full sm:w-auto">
-        Share with the Village
-      </button>
-    );
-  }
-
   return (
-    <form onSubmit={handleSubmit} className="card space-y-4">
-      <div>
-        <label className="label-text" htmlFor="topic">Topic</label>
-        <select id="topic" value={topic} onChange={(e) => setTopic(e.target.value as CommunityTopic)} className="input-field">
+    <form onSubmit={handleSubmit} className="card space-y-3">
+      <div className="flex items-start gap-3">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sage-200 text-xs font-bold text-sage-700">
+          {authorName ? authorName[0].toUpperCase() : 'P'}
+        </div>
+        <textarea
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          rows={3}
+          placeholder="What's on your mind? Share with the Village…"
+          className="input-field resize-none text-sm"
+        />
+      </div>
+
+      {error && (
+        <p className="rounded-lg bg-clay-50 px-3 py-2 text-sm text-clay-500">{error}</p>
+      )}
+
+      <div className="flex items-center justify-between">
+        <select
+          value={topic}
+          onChange={(e) => setTopic(e.target.value as CommunityTopic)}
+          className="rounded-lg border border-sage-200 px-2 py-1 text-xs text-sage-600 focus:outline-none focus:ring-1 focus:ring-sage-400"
+        >
           {TOPIC_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
-      </div>
-      <div>
-        <label className="label-text" htmlFor="title">Title</label>
-        <input id="title" required className="input-field" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What's on your mind?" />
-      </div>
-      <div>
-        <label className="label-text" htmlFor="body">Tell us more</label>
-        <textarea id="body" required rows={4} className="input-field" value={body} onChange={(e) => setBody(e.target.value)} placeholder="Share your story, question, or update…" />
-      </div>
-
-      {error && <p className="rounded-lg bg-clay-50 px-3 py-2 text-sm text-clay-500">{error}</p>}
-
-      <div className="flex gap-2">
-        <button type="submit" disabled={submitting} className="btn-primary">
+        <button
+          type="submit"
+          disabled={submitting || !body.trim()}
+          className="btn-primary text-sm disabled:opacity-50"
+        >
           {submitting ? 'Posting…' : 'Post'}
         </button>
-        <button type="button" onClick={() => setOpen(false)} className="btn-ghost">Cancel</button>
       </div>
     </form>
   );

@@ -36,7 +36,8 @@ export async function updateSession(request: NextRequest) {
     path.startsWith('/api/annotate') ||
     path.startsWith('/compare') ||
     path.startsWith('/api/compare') ||
-    path.startsWith('/api/vapi/webhook');
+    path.startsWith('/api/vapi/webhook') ||
+    path.startsWith('/api/search');
   const isOnboardingRoute = path.startsWith('/onboarding');
 
   if (!user && !isPublicRoute) {

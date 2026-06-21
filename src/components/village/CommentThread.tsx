@@ -18,34 +18,44 @@ function CommentForm({
   const router = useRouter();
   const [body, setBody] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!body.trim()) return;
     setSubmitting(true);
-    await fetch('/api/community/comments', {
+    setError(null);
+    const res = await fetch('/api/community/comments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ post_id: postId, parent_comment_id: parentCommentId, body }),
     });
+    const json = await res.json();
     setSubmitting(false);
+    if (!res.ok) {
+      setError(json.error ?? 'Could not post reply');
+      return;
+    }
     setBody('');
     onDone();
     router.refresh();
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-2 flex gap-2">
-      <input
-        className="input-field"
-        value={body}
-        onChange={(e) => setBody(e.target.value)}
-        placeholder="Write a reply…"
-      />
-      <button type="submit" disabled={submitting} className="btn-secondary shrink-0 text-sm">
-        Reply
-      </button>
-    </form>
+    <div className="mt-2 space-y-1.5">
+      <form onSubmit={handleSubmit} className="flex gap-2">
+        <input
+          className="input-field"
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          placeholder="Write a reply…"
+        />
+        <button type="submit" disabled={submitting} className="btn-secondary shrink-0 text-sm">
+          Reply
+        </button>
+      </form>
+      {error && <p className="text-xs text-clay-500">{error}</p>}
+    </div>
   );
 }
 
