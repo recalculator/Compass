@@ -66,11 +66,7 @@ export async function findBenefits(
     env: 'BROWSERBASE',
     apiKey,
     projectId,
-    model: {
-      modelName: 'anthropic/claude-sonnet-4-6',
-      apiKey,
-      baseURL: 'https://api.browserbase.com/v1/anthropic',
-    },
+    model: 'anthropic/claude-sonnet-4-6',
     verbose: 1,
   });
 

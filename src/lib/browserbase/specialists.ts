@@ -85,18 +85,14 @@ export async function findSpecialists(
     throw new Error('BROWSERBASE_API_KEY and BROWSERBASE_PROJECT_ID must be set');
   }
 
-  // Browserbase Model Gateway: use BB API key as the LLM API key so no
-  // separate ANTHROPIC_API_KEY is needed. The baseURL routes calls through
-  // Browserbase's Anthropic proxy.
+  // Stagehand v3 API mode: when env='BROWSERBASE', all act/extract/agent calls
+  // are proxied through api.stagehand.browserbase.com using the BB API key.
+  // The BB key IS the Model Gateway — no separate ANTHROPIC_API_KEY needed.
   const stagehand = new Stagehand({
     env: 'BROWSERBASE',
     apiKey,
     projectId,
-    model: {
-      modelName: 'anthropic/claude-sonnet-4-6',
-      apiKey,
-      baseURL: 'https://api.browserbase.com/v1/anthropic',
-    },
+    model: 'anthropic/claude-sonnet-4-6',
     verbose: 1,
   });
 
