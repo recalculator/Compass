@@ -22,8 +22,9 @@ const STATE_NAMES: Record<string, string> = {
 const BenefitsSchema = z.object({
   programs: z.array(
     z.object({
-      programName: z.string().describe('Name of the assistance program'),
-      description: z.string().optional().default('').describe('What the program provides'),
+      programName: z.string().describe('Specific, real name of the assistance program (not a generic category)'),
+      description: z.string().optional().default('').describe('What the program actually pays for or provides — concrete services/dollar amounts, not a generic disability blurb'),
+      eligibility: z.string().optional().default('').describe('Who specifically qualifies: diagnosis, age range, income/residency requirements'),
       contactInfo: z.string().optional().default('').describe('Phone, website, or address'),
     }),
   ),
@@ -35,20 +36,24 @@ export type BenefitResult = {
   contactInfo: string;
 };
 
-function normalizeDiagnosisTag(diagnoses: string[]): string {
-  return diagnoses
-    .map((d) => d.toLowerCase().replace(/[^a-z0-9]+/g, '_'))
-    .sort()
-    .join('|');
+function normalizeDiagnosisTag(diagnoses: string[], childAge?: number, currentServices?: string[]): string {
+  const ageBucket = childAge === undefined ? '' : childAge < 3 ? 'under3' : childAge < 18 ? 'minor' : 'adult';
+  return [
+    diagnoses.map((d) => d.toLowerCase().replace(/[^a-z0-9]+/g, '_')).sort().join('|'),
+    ageBucket,
+    (currentServices ?? []).map((s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '_')).sort().join('|'),
+  ].join('::');
 }
 
 export async function findBenefits(
   supabase: SupabaseClient,
   state: string,
   diagnoses: string[],
+  options: { childAge?: number; currentServices?: string[] } = {},
 ): Promise<BenefitResult[]> {
+  const { childAge, currentServices } = options;
   const stateCode = state.toUpperCase();
-  const diagnosisTag = normalizeDiagnosisTag(diagnoses);
+  const diagnosisTag = normalizeDiagnosisTag(diagnoses, childAge, currentServices);
   const cutoff = new Date(Date.now() - CACHE_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
   const { data: cached } = await supabase
@@ -74,6 +79,17 @@ export async function findBenefits(
 
   const stateName = STATE_NAMES[stateCode] ?? state;
   const diagnosisLabel = diagnoses.join(', ');
+  const ageContext =
+    childAge === undefined
+      ? ''
+      : childAge < 3
+        ? ` who is ${childAge} years old (eligible for Early Intervention / Part C services, not just school-age special education)`
+        : childAge < 18
+          ? ` who is ${childAge} years old`
+          : ` who is ${childAge} years old (adult/transition-age services, not pediatric-only programs)`;
+  const servicesContext = currentServices?.length
+    ? ` The child is already receiving: ${currentServices.join(', ')} — skip generic listings for services they already have and prioritize funding/gap programs instead.`
+    : '';
 
   const stagehand = new Stagehand({
     env: 'BROWSERBASE',
@@ -98,13 +114,14 @@ export async function findBenefits(
         agent.execute({
           instruction:
             `Go to https://www.findhelp.org. ` +
-            `Search for assistance programs in ${stateName}. ` +
             `Use the location field to enter "${stateName}" as the location. ` +
-            `Then search for programs related to: ${diagnosisLabel}. ` +
-            `Look for disability support programs, Medicaid waivers, state developmental disability services, ` +
-            `early intervention programs, SSI, and any financial or therapeutic assistance for families. ` +
-            `Scroll to find at least 8 program listings.`,
-          maxSteps: 10,
+            `Search specifically for: "${diagnosisLabel}"${ageContext} in ${stateName}.${servicesContext} ` +
+            `Prioritize results that name a SPECIFIC program — e.g. the state's actual Medicaid HCBS/Katie Beckett waiver name, ` +
+            `the state's Regional Center or DD-agency case management program, SSI, ABLE accounts, a named respite care grant, ` +
+            `or a named therapy/equipment funding program — over generic "disability resources" or food/housing listings that ` +
+            `aren't targeted at this diagnosis or age. Skip any listing whose title or summary doesn't mention disability, ` +
+            `developmental, autism/special-needs, or Medicaid-specific terms. Scroll to find at least 8 such listings.`,
+          maxSteps: 12,
         }),
       { label: 'benefits agent.execute' },
     );
@@ -113,14 +130,25 @@ export async function findBenefits(
     const data = await withRetry(
       () =>
         stagehand.extract(
-          'Extract the top 8 assistance or benefit program listings visible on the page. ' +
-            'For each, capture: program name, description of what it provides, and contact information (phone, website, or address).',
+          `Extract the top 8 assistance or benefit program listings visible on the page that are specifically relevant ` +
+            `to a child with ${diagnosisLabel}${ageContext} in ${stateName} — skip generic/unrelated listings (e.g. general ` +
+            `food banks or housing aid with no disability angle). For each, capture: ` +
+            `(1) the program's actual specific name, not a category label; ` +
+            `(2) a description of concretely what it provides — specific services, dollar amounts, or hours, not a vague blurb; ` +
+            `(3) eligibility — the specific diagnosis, age range, income, or residency requirements that determine who qualifies; ` +
+            `(4) contact information (phone, website, or address).`,
           BenefitsSchema,
         ),
       { label: 'benefits extract' },
     );
 
-    const results = data.programs.slice(0, 8);
+    const results = data.programs.slice(0, 8).map((b) => ({
+      programName: b.programName,
+      description: [b.description, b.eligibility ? `Eligibility: ${b.eligibility}` : '']
+        .filter(Boolean)
+        .join(' '),
+      contactInfo: b.contactInfo ?? '',
+    }));
 
     if (results.length > 0) {
       await supabase.from('browserbase_benefits').insert(
@@ -135,11 +163,7 @@ export async function findBenefits(
       );
     }
 
-    return results.map((b) => ({
-      programName: b.programName,
-      description: b.description ?? '',
-      contactInfo: b.contactInfo ?? '',
-    }));
+    return results;
   } finally {
     await stagehand.close();
   }

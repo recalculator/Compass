@@ -15,11 +15,15 @@ type Status = 'loading' | 'done' | 'error';
 export function BenefitsSearch({
   locationState,
   diagnoses,
+  childAge,
+  currentServices,
 }: {
   locationState: string;
   diagnoses: string[];
+  childAge?: number;
+  currentServices?: string[];
 }) {
-  const cacheKey = `benefits-search:${locationState}:${diagnoses.join('|')}`;
+  const cacheKey = `benefits-search:${locationState}:${diagnoses.join('|')}:${childAge ?? ''}:${(currentServices ?? []).join('|')}`;
 
   const [status, setStatus] = useState<Status>('loading');
   const [benefits, setBenefits] = useState<BenefitResult[]>([]);
@@ -36,7 +40,7 @@ export function BenefitsSearch({
       const res = await fetch('/api/search/benefits', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ state: locationState, diagnoses }),
+        body: JSON.stringify({ state: locationState, diagnoses, childAge, currentServices }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? 'Search failed');

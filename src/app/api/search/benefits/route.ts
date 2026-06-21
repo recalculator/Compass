@@ -8,6 +8,8 @@ export const maxDuration = 300;
 const RequestSchema = z.object({
   state: z.string().min(2).max(2),
   diagnoses: z.array(z.string().min(1)).min(1),
+  childAge: z.number().int().min(0).max(25).optional(),
+  currentServices: z.array(z.string()).optional(),
 });
 
 export async function POST(request: Request) {
@@ -21,11 +23,11 @@ export async function POST(request: Request) {
     );
   }
 
-  const { state, diagnoses } = parsed.data;
+  const { state, diagnoses, childAge, currentServices } = parsed.data;
 
   try {
     const supabase = createServiceRoleClient();
-    const benefits = await findBenefits(supabase, state, diagnoses);
+    const benefits = await findBenefits(supabase, state, diagnoses, { childAge, currentServices });
     return NextResponse.json({ benefits });
   } catch (err) {
     console.error('[/api/search/benefits]', err);

@@ -23,6 +23,17 @@ export default async function BenefitsPage({
   const hasProfile = profile && profile.diagnosis?.length && profile.location_state;
   const savedCount = savedBenefits?.length ?? 0;
 
+  let childAge: number | undefined;
+  if (profile?.birth_date) {
+    const birth = new Date(profile.birth_date);
+    const now = new Date();
+    childAge = now.getFullYear() - birth.getFullYear();
+    const beforeBirthday =
+      now.getMonth() < birth.getMonth() ||
+      (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate());
+    if (beforeBirthday) childAge -= 1;
+  }
+
   return (
     <div className="mx-auto max-w-4xl px-6 py-10">
       <h1 className="text-2xl font-bold text-sage-900">Benefit Finder</h1>
@@ -74,6 +85,8 @@ export default async function BenefitsPage({
             <BenefitsSearch
               locationState={profile.location_state!}
               diagnoses={profile.diagnosis!}
+              childAge={childAge}
+              currentServices={profile.current_services ?? undefined}
             />
           ) : (
             <div className="card mt-6 text-sm text-sage-500">
