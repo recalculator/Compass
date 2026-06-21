@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
 import { Logo } from '@/components/ui/Logo';
 import clsx from 'clsx';
@@ -103,8 +104,18 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-sage-50 px-6 py-12">
+    <div className="flex min-h-screen items-center justify-center bg-[#fdf8f4] px-6 py-12">
       <div className="w-full max-w-lg">
+        <div className="mb-6 overflow-hidden rounded-xl2">
+          <Image
+            src="/assets/onboarding-header.png"
+            alt="A parent and child walking together"
+            width={672}
+            height={378}
+            className="w-full object-cover"
+            priority
+          />
+        </div>
         <div className="mb-8 flex justify-center">
           <Logo />
         </div>

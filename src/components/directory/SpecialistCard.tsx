@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { Phone, Globe, Video, MapPin } from 'lucide-react';
 import type { Specialist } from '@/lib/types';
 import { Badge } from '@/components/ui/Badge';
@@ -18,11 +19,20 @@ export function SpecialistCard({ specialist }: { specialist: Specialist }) {
   return (
     <div className="card">
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="font-semibold text-sage-900">{specialist.name}</h3>
-          {specialist.practice_name && (
-            <p className="text-sm text-sage-500">{specialist.practice_name}</p>
-          )}
+        <div className="flex items-center gap-3">
+          <Image
+            src="/assets/specialist-avatar.png"
+            alt=""
+            width={44}
+            height={44}
+            className="rounded-full object-cover"
+          />
+          <div>
+            <h3 className="font-semibold text-sage-900">{specialist.name}</h3>
+            {specialist.practice_name && (
+              <p className="text-sm text-sage-500">{specialist.practice_name}</p>
+            )}
+          </div>
         </div>
         <Badge variant="sky">{SPECIALTY_LABELS[specialist.specialty_type]}</Badge>
       </div>

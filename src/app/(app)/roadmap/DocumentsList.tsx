@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { FileText, X, Loader2 } from 'lucide-react';
 
 type Doc = {
@@ -34,7 +35,25 @@ export function DocumentsList({ documents }: { documents: Doc[] }) {
 
   const docs = documents.filter((d) => !removedIds.has(d.id));
 
-  if (docs.length === 0) return null;
+  if (docs.length === 0) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-6 text-center">
+        <Image
+          src="/assets/empty-roadmap.png"
+          alt="Your journey starts here"
+          width={160}
+          height={160}
+          className="opacity-90"
+        />
+        <div>
+          <p className="font-medium text-sage-800">Your journey starts here</p>
+          <p className="mt-1 text-sm text-sage-500">
+            Upload an IEP, evaluation, or therapy note and Compass will build your roadmap automatically.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-2">
