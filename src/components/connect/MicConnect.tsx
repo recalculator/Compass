@@ -92,7 +92,17 @@ export function MicConnect() {
   }
 
   if (stage === 'oncall' && requestId) {
-    return <ComfortAgentWidget expertCallRequestId={requestId} onCallEnd={handleCallEnd} />;
+    return (
+      <div className="space-y-3">
+        <ComfortAgentWidget expertCallRequestId={requestId} onCallEnd={handleCallEnd} />
+        <p className="text-center text-sm text-sage-600">
+          Your call room is ready already, if you&apos;d rather wait there instead:{' '}
+          <a href={`/connect/${requestId}/call`} className="font-medium text-sage-700 underline">
+            Join the call room
+          </a>
+        </p>
+      </div>
+    );
   }
 
   if (stage === 'pending') {
