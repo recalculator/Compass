@@ -53,13 +53,20 @@ How to talk:
 - Keep your turns short. This is a voice conversation with someone who may
   be stressed; long monologues are harder to take in.`;
 
-const summaryPrompt = `Summarize this intake conversation between the comfort/intake assistant and
-a parent of a child with autism or another developmental disability.
-Write 3-5 sentences a research reviewer (a general member of the public,
-not a clinician) can quickly read to understand: what's going on with the
-child, what the parent has already tried, and what kind of help the parent
-seems to want. Use plain, neutral language. Do not include a diagnosis or
-clinical recommendation — just summarize what was said.`;
+const fs = await import('node:fs/promises');
+const promptVersionsPath = new URL('./generated/prompt-versions.json', import.meta.url);
+const promptVersions = JSON.parse(await fs.readFile(promptVersionsPath, 'utf8'));
+
+if (promptVersions.source !== 'annotations') {
+  console.error(
+    `Refusing to deploy v2_improved: source is "${promptVersions.source}", not "annotations" ` +
+    `(no real Terac-collected corrections were used to build it).`
+  );
+  process.exit(1);
+}
+
+const summaryPrompt = promptVersions.v2_improved;
+console.log(`Deploying v2_improved built from ${promptVersions.exampleCount} real annotation correction(s).`);
 
 const patch = {
   model: {

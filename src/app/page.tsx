@@ -70,7 +70,7 @@ export default function LandingPage() {
           </header>
 
           <section className="mx-auto max-w-4xl px-6 pt-20 pb-32 text-center">
-            <h1 className="text-5xl font-bold tracking-tight text-sage-900 sm:text-6xl">
+            <h1 className="text-5xl font-bold italic tracking-tight text-sage-900 sm:text-6xl">
               Your child&apos;s journey,<br />navigated.
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-sage-700">

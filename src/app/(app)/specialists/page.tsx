@@ -121,7 +121,7 @@ export default async function SpecialistsPage({
 
       {tab === 'find' && (
         <>
-          <h2 className="text-lg font-semibold text-sage-900">Search all specialists</h2>
+          <h2 className="mt-6 text-lg font-semibold text-sage-900">Search all specialists</h2>
 
           <form className="card mt-3 grid gap-4 sm:grid-cols-2" method="get">
             <div>

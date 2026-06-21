@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Map, Search, Users, FileCheck, HandCoins, Mic, ArrowRight } from 'lucide-react';
+import { Map, Search, Users, HandCoins, Mic, ArrowRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentChild } from '@/lib/child/getCurrentChild';
 import type { MilestoneAlert } from '@/lib/types';
@@ -33,13 +33,6 @@ const QUICK_LINKS = [
     description: 'Talk with other parents',
     icon: Users,
     tint: 'bg-sky-100 text-sky-700',
-  },
-  {
-    href: '/iep-coach',
-    label: 'IEP Coach',
-    description: 'Plain-English IEP help',
-    icon: FileCheck,
-    tint: 'bg-sage-100 text-sage-700',
   },
   {
     href: '/connect',

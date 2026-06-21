@@ -11,6 +11,20 @@ otherwise spend hours doing themselves.
 This README covers what's actually built and working today, including
 what was built specifically for the Terac challenge.
 
+## Hackathon Tracks
+
+Compass was built for, and submits to, three tracks:
+
+- **Terac** — the live-connect annotation + blind A/B evaluation flow
+  described in detail below (real human annotators rating and correcting
+  AI summaries, then a second blind comparison measuring whether that
+  feedback actually improved the model).
+- **Browserbase** — the Directory (specialist search) and Benefit Finder
+  features both run live Browserbase/Stagehand agents against real sites
+  (Psychology Today, findhelp.org) rather than static or mocked data.
+- **Poke** — the onboarding/Settings phone-number handoff that connects a
+  parent to a pre-built Poke recipe for texting Compass-related questions.
+
 ## Key Features
 
 ### Roadmap
@@ -132,14 +146,17 @@ judgment, not a self-graded metric.
    the hidden labels and prints how often `v2_improved` was preferred
    over `v1_baseline`.
 
-**Honesty about current status:** the annotation pipeline (steps 1–6 of
-the live-connect flow above) is live and wired end-to-end through real
-calls. The four-script before/after pipeline is fully built and ready to
-run, but has not been executed for this submission — `scripts/generated/`
-doesn't exist yet, meaning no real win-rate number is being reported.
-Running it requires existing annotation data (real corrected summaries)
-and spends real Terac opportunity credits. The infrastructure is real;
-the numbers, if quoted anywhere else, are not.
+**Current status:** the annotation pipeline (steps 1–6 of the live-connect
+flow above) is live and wired end-to-end through real calls, and the
+four-script before/after pipeline has been run for real. `v2_improved` was
+built from 3 real Terac-collected annotation corrections (not synthetic
+guidelines), and an 8-scenario blind A/B comparison — also judged by real
+Terac annotators, with the v1/v2 label hidden from them — came back
+**8/8 (100%) in favor of `v2_improved`**. That improved prompt has since
+been deployed to the live Vapi assistant (`scripts/update-vapi-assistant.mjs`
+refuses to deploy anything not built from `source: "annotations"`), so
+production calls now use the human-feedback-improved summarizer, not just
+the eval script.
 
 ### Why general-population annotators, not clinicians
 
@@ -267,6 +284,7 @@ up):
 0013_annotation_layer.sql
 0014_blind_eval.sql
 0015_claim_timeout.sql
+0016_remove_digest.sql
 ```
 (Note the gap between 0007 and 0010 — there is no 0008 or 0009; that's
 expected, not a missing file.)
@@ -349,11 +367,10 @@ opportunity credits.
   real deployment would need a much more deliberate consent and
   reviewer-vetting design before showing anyone details from an
   emotionally difficult conversation.
-- **The before/after eval pipeline has not been run for this
-  submission.** The four scripts described above are real and
-  functional, but `scripts/generated/` is empty — there is no win-rate
-  number to report yet. Running it for real requires existing annotation
-  data and spends Terac credits.
+- **The before/after eval pipeline has been run once, on 8 scenarios.**
+  The 100% win rate reflects a single 8-comparison run, not a large-scale
+  study — a real production rollout would want a much bigger held-out set
+  before trusting that number generally.
 - **Live-connect has several points of external dependency** (Daily.co,
   Vapi, Terac, all chained together) — if any one of Daily room
   creation, the Vapi webhook delivery, or Terac's opportunity
