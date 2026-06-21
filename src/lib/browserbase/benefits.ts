@@ -115,13 +115,12 @@ export async function findBenefits(
           instruction:
             `Go to https://www.findhelp.org. ` +
             `Use the location field to enter "${stateName}" as the location. ` +
-            `Search specifically for: "${diagnosisLabel}"${ageContext} in ${stateName}.${servicesContext} ` +
-            `Prioritize results that name a SPECIFIC program — e.g. the state's actual Medicaid HCBS/Katie Beckett waiver name, ` +
-            `the state's Regional Center or DD-agency case management program, SSI, ABLE accounts, a named respite care grant, ` +
-            `or a named therapy/equipment funding program — over generic "disability resources" or food/housing listings that ` +
-            `aren't targeted at this diagnosis or age. Skip any listing whose title or summary doesn't mention disability, ` +
-            `developmental, autism/special-needs, or Medicaid-specific terms. Scroll to find at least 8 such listings.`,
-          maxSteps: 12,
+            `Then search for programs related to: ${diagnosisLabel}${ageContext}.${servicesContext} ` +
+            `Look for disability support programs, Medicaid waivers, state developmental disability services, ` +
+            `early intervention programs, SSI, and any financial or therapeutic assistance for families — ` +
+            `favor listings that are about disability/developmental/medical support over plain food or housing aid. ` +
+            `Scroll to find at least 8 program listings.`,
+          maxSteps: 10,
         }),
       { label: 'benefits agent.execute' },
     );
@@ -130,12 +129,12 @@ export async function findBenefits(
     const data = await withRetry(
       () =>
         stagehand.extract(
-          `Extract the top 8 assistance or benefit program listings visible on the page that are specifically relevant ` +
-            `to a child with ${diagnosisLabel}${ageContext} in ${stateName} — skip generic/unrelated listings (e.g. general ` +
-            `food banks or housing aid with no disability angle). For each, capture: ` +
-            `(1) the program's actual specific name, not a category label; ` +
-            `(2) a description of concretely what it provides — specific services, dollar amounts, or hours, not a vague blurb; ` +
-            `(3) eligibility — the specific diagnosis, age range, income, or residency requirements that determine who qualifies; ` +
+          `Extract the top 8 assistance or benefit program listings visible on the page. ` +
+            `For each, capture: ` +
+            `(1) the program's name; ` +
+            `(2) a description of what it provides — be as concrete as the listing allows (specific services, dollar amounts, or hours), ` +
+            `mentioning ${diagnosisLabel}${ageContext} where the listing supports it, but don't invent specifics the listing doesn't state; ` +
+            `(3) eligibility — age range, income, or residency requirements mentioned in the listing, if any; ` +
             `(4) contact information (phone, website, or address).`,
           BenefitsSchema,
         ),
