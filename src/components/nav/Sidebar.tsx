@@ -56,7 +56,7 @@ export function Sidebar({ childName }: { childName?: string }) {
         })}
       </nav>
 
-      <form action="/api/auth/signout" method="post">
+<form action="/api/auth/signout" method="post">
         <button
           type="submit"
           className="flex w-full items-center gap-3 rounded-xl2 px-3 py-2.5 text-sm font-medium text-sage-500 transition hover:bg-sage-50"
