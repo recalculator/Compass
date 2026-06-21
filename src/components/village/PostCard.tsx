@@ -47,9 +47,18 @@ export function PostCard({ post, myId }: { post: Post; myId?: string }) {
   return (
     <div className="card space-y-3">
       <div className="flex items-start gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sage-200 text-xs font-bold text-sage-700">
-          {initials}
-        </div>
+        {!isOwnPost && post.author ? (
+          <Link
+            href={`/village/messages/${post.author.id}`}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sage-200 text-xs font-bold text-sage-700 hover:bg-sage-300"
+          >
+            {initials}
+          </Link>
+        ) : (
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sage-200 text-xs font-bold text-sage-700">
+            {initials}
+          </div>
+        )}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             {!isOwnPost && post.author ? (
