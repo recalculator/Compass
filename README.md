@@ -1,205 +1,382 @@
 # Compass
 
-A personal navigator for parents of autistic and special needs children. Compass
-knows your child, knows your journey, and tells you what to do next.
+Compass is a navigator app for parents of autistic and special-needs
+children. Getting a diagnosis is the easy part — the hard part is
+everything after: figuring out what an IEP actually means, finding a
+therapist who takes your insurance, learning what your state will
+actually pay for, and not feeling alone while you do it. Compass puts all
+of that in one place and uses AI to do the research a parent would
+otherwise spend hours doing themselves.
 
-## Tech stack
+This README covers what's actually built and working today, including
+what was built specifically for the Terac challenge.
 
-- **Next.js 14** (App Router, TypeScript)
-- **Tailwind CSS** for styling
-- **Supabase** for Postgres, Auth, and file storage
-- **Claude API** (`claude-sonnet-4-6`) as the AI brain — document extraction, the
-  "what comes next" engine, and the IEP Coach
+## Key Features
 
-## Features
+### Roadmap
+Upload an IEP, evaluation, or therapy note (PDF or image) and Claude
+extracts diagnoses, current services, goals, recommendations, and
+important dates directly from the document. Those extracted items build a
+timeline, and a separate Claude call generates 3–6 concrete "next steps"
+(with urgency: now / soon / upcoming) based on the child's profile and
+extraction history. This is the entry point for a parent who just got a
+new document and doesn't know what to do with it.
 
-1. **Auth & Onboarding** — email/password signup, then a guided flow to capture the
-   child's name, age, diagnosis, current services, and location.
-2. **The Roadmap** — upload IEPs, evaluations, or therapy notes (PDF/image). Claude
-   extracts diagnoses, services, goals, recommendations, and key dates, builds a
-   visual timeline, generates proactive "what comes next" suggestions, and exports a
-   one-page PDF summary parents can hand to doctors/teachers.
-3. **The Directory** — search specialists by ZIP code, specialty type, insurance, and
-   telehealth availability.
-4. **The Village** — a community feed with topic tags and threaded comments.
-5. **IEP Coach** — upload an IEP and get a plain-English section-by-section
-   explanation, flags on anything to question, and a list of questions for the next
-   IEP meeting.
-6. **Benefits Finder** (`/dashboard/benefits`) — pick a state and Claude generates
-   Medicaid waivers, Regional Center services, SSI basics, ABLE accounts, state
-   grants, tax credits, and respite funding, grouped into cards with a "Save to my
-   profile" action (`saved_benefits` table). Includes a disclaimer that results are
-   informational and should be verified with official sources.
-7. **Weekly Digest Email** — `/api/digest/send` (cron-triggered, secret-protected)
-   fetches every user with digests enabled, has Claude write the week's content
-   (appointments, IEP deadlines, a focus tip, a trending Village post, a closing
-   line), renders it into a hand-built warm HTML email, and sends it via a raw HTTP
-   POST to Mailgun's API (no email SDK). Every send is logged to `digest_logs`.
-   `/api/digest/preview` returns the same HTML for the current user so you can view
-   it in the browser without sending anything. Toggle on `/dashboard/settings`.
-8. **Milestone Alerts** — the "Coming up" section on `/dashboard` reads roadmap items
-   and child profile data, and Claude surfaces time-sensitive alerts (IEP renewal
-   windows, age-based transition planning, evaluations that may be due for an
-   update). Each alert can be marked done or snoozed for 30 days (`milestone_alerts`
-   table).
+### IEP Coach
+Upload an IEP and get a plain-English, section-by-section breakdown:
+what each part means, which parts are worth raising concerns about,
+and a list of questions to bring to the next IEP meeting. Stateless —
+nothing is persisted, it's a one-time analysis tool.
 
-## Project structure
+### Directory (Specialist Search)
+Search for ABA, speech, OT, PT, psychology, or developmental-pediatrics
+providers by ZIP code. Live results come from a Browserbase/Stagehand
+agent that searches Psychology Today and extracts real listings (name,
+phone, address, description, profile link), cached for 7 days per
+ZIP+specialty. Results can be saved for later, and each one can get an
+on-demand Claude-generated summary.
+
+### Benefit Finder
+Same Browserbase/Stagehand approach, pointed at findhelp.org, searching
+for Medicaid waivers, SSI, Regional Center / state DD-agency programs,
+and other disability-specific assistance — targeted using the child's
+diagnosis, age bracket, and current services so results lean toward
+specific, relevant programs rather than generic disability listings.
+Results are cached for 7 days and can be saved.
+
+### Village
+A public community feed — parents post under topics (newly diagnosed,
+IEP help, school, behavior, therapies, general) and reply in threaded
+comments. Every post and comment passes through a Claude moderation
+check before publishing. Deliberately feed-only: no private messaging
+between parents.
+
+### Poke (text assistant)
+During onboarding (or later in Settings), a parent can save their phone
+number and connect to a pre-built Poke recipe, letting them text
+Compass-related questions via iMessage/SMS without opening the app. The
+phone number is the only thing Compass itself stores and manages — the
+text-handling logic lives in Poke's hosted recipe.
+
+### Live-Connect (mic-first AI intake)
+This is the feature built specifically around the Terac challenge — see
+the next section for the full breakdown of how it works and what it
+measures.
+
+## The Terac Challenge: How Compass Uses It
+
+The core idea: instead of routing a parent to a real human specialist (a
+licensed clinician) for an emotionally difficult moment, Compass routes
+them to an **AI comfort companion** first, and uses **Terac's
+general-population annotator marketplace** to evaluate and improve the
+AI's output with real human judgment — without needing licensed
+clinicians in the loop at all.
+
+### The flow
+
+1. A parent presses a single mic button on `/connect`. No form, no
+   waiting room.
+2. A private Daily.co video room is created immediately for that
+   request (in case anyone wants to join later).
+3. A Vapi voice agent talks to the parent in-browser — a "comfort
+   companion," not a clinician — and listens to whatever they want to
+   talk through.
+4. When the call ends, Vapi generates a summary and posts it to
+   Compass's webhook.
+5. Compass creates and launches a **Terac opportunity**: a task asking a
+   general-population annotator to read the AI-generated summary and
+   rate it.
+6. Compass polls Terac for a claimed submission. Once someone claims the
+   task, it's auto-approved and the request status flips to
+   `scheduled`. The parent gets a link to join the Daily call room if
+   they want to talk live to whoever picked up the task; the annotator
+   gets the same link from their task page.
+
+### What the annotator actually does
+
+The Terac participant lands on a public Compass page
+(`/annotate/{requestId}` — no login required, since they have no Compass
+account) and:
+
+- Reads the AI-generated summary of the parent's call.
+- Rates its **clarity** on a 1–5 scale.
+- Optionally writes a **corrected/improved version** of the summary.
+- Optionally leaves free-text notes.
+
+That submission is stored in an `annotations` table, tied back to the
+Terac submission ID. This is the human-data-collection half of the
+challenge: real people, not the model itself, judging and correcting AI
+output.
+
+### The before/after evaluation methodology
+
+The annotation data feeds a second pipeline designed to measure whether
+human feedback actually improves the AI's summaries — via a **blind A/B
+comparison**, also run through Terac, so the evaluation itself is human
+judgment, not a self-graded metric.
+
+1. `scripts/build-improved-prompt.mjs` — pulls real corrected summaries
+   out of the `annotations` table and uses them as few-shot examples to
+   build a `v2_improved` prompt (falls back to hand-written guidelines
+   from common failure patterns if no corrections exist yet).
+2. `scripts/run-eval.mjs` — runs 8 fixed, held-out test scenarios
+   (realistic intake-call transcripts) through both `v1_baseline` and
+   `v2_improved` prompts via Claude, producing paired summaries.
+3. `scripts/collect-blind-eval.mjs` — randomly assigns each pair's two
+   summaries to slots A/B (the v1/v2 label is hidden), writes them to a
+   `comparison_pairs` table, and launches a **second, separate Terac
+   opportunity** — one task per pair, at `/compare/{pairId}` — asking
+   general-population annotators which summary is clearer, with no idea
+   which one came from which prompt version.
+4. `scripts/report-results.mjs` — tallies `comparison_results` against
+   the hidden labels and prints how often `v2_improved` was preferred
+   over `v1_baseline`.
+
+**Honesty about current status:** the annotation pipeline (steps 1–6 of
+the live-connect flow above) is live and wired end-to-end through real
+calls. The four-script before/after pipeline is fully built and ready to
+run, but has not been executed for this submission — `scripts/generated/`
+doesn't exist yet, meaning no real win-rate number is being reported.
+Running it requires existing annotation data (real corrected summaries)
+and spends real Terac opportunity credits. The infrastructure is real;
+the numbers, if quoted anywhere else, are not.
+
+### Why general-population annotators, not clinicians
+
+Per the Terac challenge's design, annotators are general members of the
+public, not screened for any clinical credential. Compass's screening
+question is deliberately minimal (an optional free-text "anything you'd
+like us to know before starting" field) — there's no profession-based
+filter. This is a hackathon-rules constraint, not a production design
+choice: a real deployment of this idea would need either licensed
+reviewers or a much more careful consent/safety framework before any
+annotator is shown details from an emotionally vulnerable parent's call.
+
+## Tech Stack
+
+**Framework**
+- Next.js 14 (App Router), React 18, TypeScript
+- Tailwind CSS
+
+**Database & Auth**
+- Supabase (Postgres, Auth, Row-Level Security, Storage)
+
+**AI / LLM**
+- Anthropic Claude (`claude-sonnet-4-6`) — document extraction, IEP
+  analysis, next-steps generation, specialist/benefit summaries,
+  community moderation, and the live-connect eval scripts
+
+**Browser automation**
+- Browserbase + Stagehand — live web search/extraction against
+  Psychology Today (specialists) and findhelp.org (benefits)
+
+**Live-connect stack**
+- Vapi — in-browser voice AI agent (the "comfort companion")
+- Daily.co — video call rooms, created per request
+- Terac REST API (`https://terac.com/api/external/v2`) — opportunity
+  creation, launch, submission polling/approval. Note: a `.mcp.json`
+  pointing at Terac's MCP server exists in the repo as an artifact of
+  early exploration, but the final, working integration is a plain REST
+  client (`src/lib/terac/client.ts`) — MCP was not used in the shipped
+  architecture.
+
+**Other integrations**
+- Mailgun (HTTP API) — weekly digest emails
+- Poke — text-assistant recipe (phone-number handoff only; the
+  conversational logic lives outside this repo)
+
+## Architecture
 
 ```
-src/
-  app/
-    page.tsx                  Landing page
-    login/, signup/           Auth pages
-    onboarding/                Multi-step onboarding flow
-    (app)/                    Authenticated app shell (sidebar layout)
-      dashboard/              Dashboard home ("Coming up"), benefits/, settings/
-      roadmap/                The Roadmap (hero feature)
-      directory/              The Directory
-      village/                The Village (community)
-      iep-coach/              IEP Coach
-    api/                      Route handlers (uploads, Claude calls, PDF export, etc.)
-  components/                 Shared UI (nav, cards, badges, forms)
-  lib/
-    supabase/                 Browser/server/middleware Supabase clients
-    claude/                   Claude API wrappers (extraction, next-steps, IEP coach,
-                               benefits, digest content, milestone alerts)
-    email/                    HTML email template + Mailgun HTTP sender
-    digest/                   Shared digest-building logic (used by send + preview)
-    types.ts                  Shared TypeScript types
-supabase/
-  migrations/
-    0001_init.sql             Core schema, RLS policies, storage bucket
-    0002_features.sql         saved_benefits, digest_logs, milestone_alerts
-  seed.sql                    Sample specialists for local dev
+Parent presses mic (/connect)
+        │
+        ▼
+POST /api/connect/request ──► creates expert_call_requests row (pending)
+        │                     creates Daily room + token (src/lib/daily)
+        ▼
+Vapi voice agent runs in-browser (ComfortAgentWidget.tsx)
+        │  parent talks, call ends
+        ▼
+POST /api/vapi/webhook
+        │  stores call_notes.ai_generated_summary
+        │  creates + launches a Terac opportunity (src/lib/terac/client.ts)
+        │  task_url → /annotate/{requestId}
+        │  status: pending → launched
+        ▼
+Browser polls GET /api/connect/request/[id]/status every 5s
+        │  checks Terac submissions; once claimed, auto-approves
+        │  status: launched → scheduled (or → timed_out after 10 min)
+        ▼
+Annotator opens /annotate/{requestId} (public, no auth)
+        │  rates clarity (1–5), optionally corrects the summary, adds notes
+        ▼
+POST /api/annotate/{callNotesId} ──► stores annotations row
+        │
+        ▼
+Parent + annotator can both join the same Daily room via room_url
 ```
 
-## Local setup
+```
+Eval pipeline (separate, offline, run via scripts/)
+        │
+build-improved-prompt.mjs ──► v2_improved prompt, from real annotations
+        ▼
+run-eval.mjs ──► runs 8 held-out scenarios through v1 + v2 via Claude
+        ▼
+collect-blind-eval.mjs ──► publishes blind A/B pairs as a second Terac
+        │                   opportunity at /compare/{pairId}
+        ▼
+report-results.mjs ──► tallies which version annotators preferred
+```
 
-### 1. Install dependencies
+Every other feature (Roadmap, Directory, Benefits, IEP Coach, Village)
+follows the same simple pattern: a Next.js page/component calls an
+internal API route, which calls either Claude directly or a
+Browserbase/Stagehand agent, and reads/writes Supabase.
 
+## Setup Instructions
+
+### 1. Prerequisites
+- Node.js 18+
+- A Supabase project
+- API keys for: Anthropic, Browserbase, Daily.co, Vapi, Terac, Mailgun
+  (Mailgun is only required for the weekly digest email feature)
+
+### 2. Install dependencies
 ```bash
 npm install
 ```
 
-### 2. Create a Supabase project
+### 3. Set up Supabase
+Create a project at [supabase.com](https://supabase.com), then run every
+migration in `supabase/migrations/` **in filename order** against it
+(via the Supabase SQL editor, or the Supabase CLI if you have one set
+up):
 
-1. Create a new project at [supabase.com](https://supabase.com).
-2. In the SQL Editor, run `supabase/migrations/0001_init.sql`, then
-   `supabase/migrations/0002_features.sql` — together these create every table, RLS
-   policy, the `documents` storage bucket, and the trigger that mirrors new
-   `auth.users` into `public.users`.
-3. Optionally run `supabase/seed.sql` to populate a handful of sample specialists for
-   the Directory.
-4. Go to Project Settings → API and copy your Project URL, anon key, and service
-   role key.
+```
+0001_init.sql
+0002_features.sql
+0003_browserbase.sql
+0004_phone_numbers.sql
+0005_benefits_state.sql
+0006_saved_specialists.sql
+0007_direct_messages.sql
+0010_specialist_provenance.sql
+0011_expert_call_requests.sql
+0012_inapp_call.sql
+0013_annotation_layer.sql
+0014_blind_eval.sql
+0015_claim_timeout.sql
+```
+(Note the gap between 0007 and 0010 — there is no 0008 or 0009; that's
+expected, not a missing file.)
 
-### 3. Get an Anthropic API key
+From your Supabase project's API settings, grab the project URL, anon
+key, and service role key.
 
-Create a key at [console.anthropic.com](https://console.anthropic.com).
+### 4. Get the rest of your credentials
+- **Anthropic** — create an API key at
+  [console.anthropic.com](https://console.anthropic.com).
+- **Browserbase** — create a project and API key at
+  [browserbase.com](https://browserbase.com). Used to power the live
+  specialist and benefits search (billed through Browserbase, not a
+  separate Anthropic key).
+- **Daily.co** — create an API key at
+  [dashboard.daily.co](https://dashboard.daily.co). No other dashboard
+  setup needed — rooms and tokens are created per-request by the app.
+- **Vapi** — create an account at [vapi.ai](https://vapi.ai) and get
+  your private API key (`VAPI_API_KEY`) and public key
+  (`NEXT_PUBLIC_VAPI_PUBLIC_KEY`).
+- **Terac** — get your API key and project ID from your Terac hackathon
+  dashboard.
+- **Mailgun** — only needed if you want the weekly digest emails to
+  actually send; otherwise leave the placeholder values.
 
-### 3b. Get a Mailgun account (only needed for the weekly digest)
-
-Create a domain at [mailgun.com](https://mailgun.com) and grab your private API key.
-The Benefits Finder and Milestone Alerts features work without this — it's only
-required to actually send (not preview) digest emails.
-
-### 4. Configure environment variables
+### 5. Configure environment variables
+Copy `.env.example` to `.env.local` and fill in every value:
 
 ```bash
 cp .env.example .env.local
 ```
 
-Fill in:
+All variables Compass actually reads are documented inline in
+`.env.example` (Supabase, Anthropic, Mailgun/digest, Terac, Daily.co,
+Vapi, Browserbase).
 
-```
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-ANTHROPIC_API_KEY=sk-ant-your-key
-MAILGUN_API_KEY=your-mailgun-private-api-key
-MAILGUN_DOMAIN=mg.yourdomain.com
-DIGEST_FROM_EMAIL=compass@yourdomain.com
-DIGEST_CRON_SECRET=a-long-random-string
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
+### 6. One-time setup script: create the Vapi assistant
+The comfort-companion assistant has to be minted once via the Vapi API
+before `NEXT_PUBLIC_VAPI_ASSISTANT_ID` exists:
+
+```bash
+VAPI_API_KEY=your-key node scripts/create-vapi-assistant.mjs
 ```
 
-### 5. Run the app
+This prints an assistant ID — paste it into `.env.local` as
+`NEXT_PUBLIC_VAPI_ASSISTANT_ID`. If you need to change the assistant's
+behavior later without recreating it, use
+`node scripts/update-vapi-assistant.mjs` instead (it patches in place and
+wires up `serverUrl` so Vapi's end-of-call webhook reaches
+`/api/vapi/webhook`).
 
+### 7. Run the app
 ```bash
 npm run dev
 ```
+Visit `http://localhost:3000`.
 
-Visit [http://localhost:3000](http://localhost:3000). Sign up, complete onboarding,
-and you'll land on the Roadmap.
-
-### 6. Email confirmation (optional, for local dev)
-
-By default Supabase requires email confirmation before a session is issued. For fast
-local testing, you can disable it: Authentication → Providers → Email → turn off
-"Confirm email". In production, leave it on and the signup flow already handles the
-"check your inbox" state.
-
-## Notes on the Claude integration
-
-- `src/lib/claude/extract.ts` sends uploaded PDFs/images directly to Claude as a
-  document/image content block and asks for structured JSON (diagnoses, services,
-  goals, recommendations, important dates). That JSON populates `roadmap_items` and
-  merges new diagnoses/services into the child's profile.
-- `src/lib/claude/next-steps.ts` feeds the child's profile + roadmap history back to
-  Claude to generate proactive, age/diagnosis-aware next steps.
-- `src/lib/claude/iep-coach.ts` does a deeper read of IEP documents specifically:
-  plain-English section explanations, flags on weak/non-compliant language, and a
-  tailored list of questions for the next IEP meeting.
-
-- `src/lib/claude/benefits.ts` asks Claude for a state's Medicaid waivers, Regional
-  Center services, SSI, ABLE accounts, grants, tax credits, and respite funding as
-  structured JSON, grouped by a fixed category enum so the UI can group cards
-  consistently.
-- `src/lib/claude/digest.ts` turns a user's roadmap data + a trending Village post
-  into the digest *content* (JSON, not HTML) — `src/lib/email/template.ts` then
-  renders that content into the actual inline-styled HTML email, so Claude never
-  controls markup directly.
-- `src/lib/claude/milestones.ts` looks at roadmap dates, evaluation history, and the
-  child's age to surface grounded, date-aware alerts (IEP renewal windows, age-based
-  transitions, stale evaluations) — it's instructed to return an empty array rather
-  than invent a date it can't support from the data.
-
-All Claude calls use `claude-sonnet-4-6` and expect raw JSON back — the wrappers
-extract the first/last `{}`/`[]` from the response defensively.
-
-## Sending the weekly digest
-
-`/api/digest/send` is meant to be hit by an external scheduler (cron, a Supabase Edge
-Function on a schedule, GitHub Actions, etc.) — it is **not** called from the browser.
-It requires a matching secret header:
+### 8. (Optional) Run the before/after eval pipeline
+Requires real annotation data already in your `annotations` table (i.e.
+real live-connect calls have happened and at least one annotator has
+submitted a correction) and a real `ANTHROPIC_API_KEY` / Supabase
+service role key in `.env.local`:
 
 ```bash
-curl -X POST https://yourapp.com/api/digest/send \
-  -H "x-digest-secret: $DIGEST_CRON_SECRET"
+npx tsx scripts/build-improved-prompt.mjs   # writes scripts/generated/prompt-versions.json
+npx tsx scripts/run-eval.mjs                # writes scripts/generated/eval-pairs.json
+npx tsx scripts/collect-blind-eval.mjs       # publishes a blind Terac opportunity
+npx tsx scripts/report-results.mjs           # prints the v1 vs v2 win rate
 ```
+Each script must be run in order — each one consumes the previous
+script's output file. `collect-blind-eval.mjs` spends real Terac
+opportunity credits.
 
-It uses the Supabase **service role** key to read every user with
-`email_digest_enabled = true`, builds each digest, sends it via Mailgun's HTTP API
-(`fetch` + Basic auth, no email SDK), and logs the result (`sent`/`failed`) to
-`digest_logs`. To preview your own digest without sending anything, visit
-`/api/digest/preview` while logged in — it returns the rendered HTML directly.
+## Known Limitations
 
-## Known limitations / next steps
+- **General-population annotators only.** Per the Terac challenge's
+  design, there's no clinical screening on who reviews a parent's call
+  summary — just an optional free-text field. This is a constraint of
+  the hackathon's annotator pool, not a production safety decision; a
+  real deployment would need a much more deliberate consent and
+  reviewer-vetting design before showing anyone details from an
+  emotionally difficult conversation.
+- **The before/after eval pipeline has not been run for this
+  submission.** The four scripts described above are real and
+  functional, but `scripts/generated/` is empty — there is no win-rate
+  number to report yet. Running it for real requires existing annotation
+  data and spends Terac credits.
+- **Live-connect has several points of external dependency** (Daily.co,
+  Vapi, Terac, all chained together) — if any one of Daily room
+  creation, the Vapi webhook delivery, or Terac's opportunity
+  creation/launch fails, the request is marked `failed` and surfaced to
+  the parent, but the feature is only as reliable as the slowest/least
+  available of those three services on a given day.
+- **Terac launches are hard-capped at $20 per opportunity** as a safety
+  rail in `src/lib/terac/client.ts` — if real-world pricing ever exceeds
+  that, the launch is refused rather than silently overspending, and the
+  request is marked `failed`.
+- **Poke's actual text-handling logic is outside this repo.** Compass
+  only collects and stores the parent's phone number; the conversational
+  behavior lives in Poke's hosted recipe.
+- **IEP Coach and most directory/benefit lookups have no persistence
+  requirement by design** — they're meant to be quick, stateless tools,
+  not records systems.
 
-- The Next.js dependency is pinned to the latest `14.2.x` patch. A few non-critical
-  advisories (image optimization, RSC cache poisoning) only have fixes on Next 16,
-  which is a breaking upgrade — not done here since the brief asked for Next 14.
-- Directory search currently matches ZIP code exactly; a production version would
-  want radius-based geo search (e.g. via PostGIS).
-- IEP Coach analyses aren't persisted — each upload is a fresh Claude call. Worth
-  storing in `documents`/a dedicated table if parents want history.
-- "Upcoming appointments" in the digest and Roadmap timeline are derived from
-  `roadmap_items.item_date` — there's no dedicated appointments/calendar table yet.
-  If real scheduling becomes a feature, it deserves its own table rather than
-  overloading roadmap items.
-- The Benefits Finder doesn't cache results — every state search is a fresh Claude
-  call. Given how slowly benefit programs change, caching by state for a day or two
-  would cut cost without hurting freshness.
-- Milestone alert generation is triggered manually (a "check for alerts" button) — a
-  production version would want this to run on a schedule per user, similar to the
-  digest job.
+## Team / Branch Structure
+
+The Poke text-assistant feature (phone number collection in onboarding
+and settings) was built independently by a teammate and merged in
+alongside the Terac/live-connect work, which was developed on its own
+feature branch in parallel. Both landed on `main` together; the
+migration numbering reflects that interleaving (e.g. `0004_phone_numbers`
+sits between earlier general-feature migrations and the later
+Terac-specific ones added once the live-connect branch merged).
