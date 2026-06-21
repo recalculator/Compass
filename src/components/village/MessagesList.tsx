@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Mail } from 'lucide-react';
+import { Mail, Search, Loader2 } from 'lucide-react';
 
 type Conversation = {
   userId: string;
@@ -21,6 +21,68 @@ function relativeTime(dateStr: string) {
   if (h < 24) return `${h}h`;
   const d = Math.floor(h / 24);
   return `${d}d`;
+}
+
+type UserResult = { id: string; full_name: string };
+
+function NewMessageSearch() {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<UserResult[]>([]);
+  const [searching, setSearching] = useState(false);
+
+  useEffect(() => {
+    if (!query.trim()) {
+      setResults([]);
+      return;
+    }
+    setSearching(true);
+    const handle = setTimeout(() => {
+      fetch(`/api/community/users?q=${encodeURIComponent(query.trim())}`)
+        .then((r) => r.json())
+        .then(({ users }) => setResults(users ?? []))
+        .finally(() => setSearching(false));
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [query]);
+
+  return (
+    <div className="mb-4">
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-sage-400" />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search for a parent to message…"
+          className="input-field pl-9"
+        />
+        {searching && (
+          <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-sage-400" />
+        )}
+      </div>
+
+      {results.length > 0 && (
+        <div className="mt-2 space-y-1.5">
+          {results.map((u) => (
+            <Link
+              key={u.id}
+              href={`/village/messages/${u.id}`}
+              className="card flex items-center gap-3 py-3 hover:shadow-none"
+            >
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sage-200 text-xs font-bold text-sage-700">
+                {u.full_name[0]?.toUpperCase() ?? 'P'}
+              </div>
+              <span className="text-sm font-medium text-sage-900">{u.full_name}</span>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {query.trim() && !searching && results.length === 0 && (
+        <p className="mt-2 text-xs text-sage-400">No one found matching &quot;{query}&quot;.</p>
+      )}
+    </div>
+  );
 }
 
 export function MessagesList() {
@@ -66,23 +128,33 @@ export function MessagesList() {
   }, []);
 
   if (loading) {
-    return <p className="py-10 text-center text-sm text-sage-400">Loading messages…</p>;
+    return (
+      <div>
+        <NewMessageSearch />
+        <p className="py-10 text-center text-sm text-sage-400">Loading messages…</p>
+      </div>
+    );
   }
 
   if (conversations.length === 0) {
     return (
-      <div className="py-10 text-center">
-        <Mail className="mx-auto h-8 w-8 text-sage-300" />
-        <p className="mt-3 text-sm text-sage-500">No messages yet.</p>
-        <p className="mt-1 text-xs text-sage-400">
-          Message a parent from any post in the Feed.
-        </p>
+      <div>
+        <NewMessageSearch />
+        <div className="py-10 text-center">
+          <Mail className="mx-auto h-8 w-8 text-sage-300" />
+          <p className="mt-3 text-sm text-sage-500">No messages yet.</p>
+          <p className="mt-1 text-xs text-sage-400">
+            Search for a parent above, or message someone from a post in the Feed.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-2">
+    <div>
+      <NewMessageSearch />
+      <div className="space-y-2">
       {conversations.map((conv) => (
         <Link
           key={conv.userId}
@@ -106,6 +178,7 @@ export function MessagesList() {
           )}
         </Link>
       ))}
+      </div>
     </div>
   );
 }
