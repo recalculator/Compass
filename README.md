@@ -36,10 +36,10 @@ timeline, and a separate Claude call generates 3–6 concrete "next steps"
 extraction history. This is the entry point for a parent who just got a
 new document and doesn't know what to do with it.
 
-### IEP Coach
-Upload an IEP and get a plain-English, section-by-section breakdown:
+### Compass Coach
+Upload a document and get a plain-English, section-by-section breakdown:
 what each part means, which parts are worth raising concerns about,
-and a list of questions to bring to the next IEP meeting. Stateless —
+and a list of questions to bring to the next IEP meeting/doctor appointment. Stateless —
 nothing is persisted, it's a one-time analysis tool.
 
 ### Directory (Specialist Search)
