@@ -74,10 +74,14 @@ export default async function SpecialistsPage({
     <div className="mx-auto max-w-4xl px-6 py-10">
       {zip ? <DirectorySave zip={zip} type={type} /> : <DirectoryRestore />}
 
-      <h1 className="text-2xl font-bold text-sage-900">Specialists</h1>
-      <p className="mt-1 text-sm text-sage-600">
-        Find ABA, speech, OT, feeding, developmental, and other specialists near you.
-      </p>
+      <div className="overflow-hidden rounded-xl2 bg-gradient-to-br from-sky-700 via-sky-700 to-sage-600 px-8 py-8 text-white shadow-soft">
+        <p className="text-sm font-medium text-sky-100">The Directory</p>
+        <h1 className="mt-1 text-2xl font-bold tracking-tight">Find a specialist</h1>
+        <p className="mt-2 max-w-md text-sm leading-relaxed text-sky-100">
+          ABA, speech, OT, feeding, developmental pediatric, and more — pulled live from
+          real provider listings near you.
+        </p>
+      </div>
 
       {/* Tabs */}
       <div className="mt-6 flex gap-1 border-b border-sage-100">
@@ -151,9 +155,11 @@ export default async function SpecialistsPage({
             <DirectoryLiveSearch zip={zip} specialtyType={type} savedMap={savedMap} />
           )}
           {!zip && (
-            <p className="mt-8 text-center text-sm text-sage-500">
-              Enter a ZIP code to search for specialists near you.
-            </p>
+            <div className="mt-8 rounded-xl2 border-2 border-dashed border-sage-200 bg-sage-50 px-6 py-10 text-center">
+              <p className="text-sm text-sage-500">
+                Enter a ZIP code to search for specialists near you.
+              </p>
+            </div>
           )}
         </>
       )}

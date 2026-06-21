@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server';
-import { EmailPreferences } from '@/components/settings/EmailPreferences';
 import { PhoneSettings } from '@/components/settings/PhoneSettings';
 import { ChildProfileSettings } from '@/components/settings/ChildProfileSettings';
 
@@ -9,7 +8,7 @@ export default async function SettingsPage() {
 
   const { data: userRow } = await supabase
     .from('users')
-    .select('id, email, full_name, email_digest_enabled, phone_number')
+    .select('id, email, full_name, phone_number')
     .eq('id', user!.id)
     .single();
 
@@ -37,7 +36,6 @@ export default async function SettingsPage() {
             initialState={childRow.location_state}
           />
         )}
-        <EmailPreferences userId={userRow!.id} initialEnabled={userRow!.email_digest_enabled} />
         <PhoneSettings
           userId={userRow!.id}
           initialParentPhone={userRow?.phone_number ?? null}

@@ -50,12 +50,20 @@ export function NextSteps({ items }: { items: RoadmapItem[] }) {
         </p>
       ) : (
         <ul className="mt-4 space-y-3">
-          {items.map((item) => (
-            <li key={item.id} className="rounded-xl2 border border-sage-200 bg-sage-50 p-3">
-              <p className="text-sm font-semibold text-sage-900">{item.title}</p>
-              {item.description && (
-                <p className="mt-0.5 text-sm text-sage-600">{item.description}</p>
-              )}
+          {items.map((item, i) => (
+            <li
+              key={item.id}
+              className="flex gap-3 rounded-xl2 border border-sage-200 bg-sage-50 p-3"
+            >
+              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-sage-600 text-xs font-bold text-white">
+                {i + 1}
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-sage-900">{item.title}</p>
+                {item.description && (
+                  <p className="mt-0.5 text-sm text-sage-600">{item.description}</p>
+                )}
+              </div>
             </li>
           ))}
         </ul>

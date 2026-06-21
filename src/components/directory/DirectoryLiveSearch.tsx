@@ -63,13 +63,16 @@ export function DirectoryLiveSearch({
   }
 
   return (
-    <div className="mt-6 rounded-xl border border-sage-100 bg-sage-50 p-6">
+    <div className="mt-6 rounded-xl2 border border-sage-100 bg-sage-50 p-6">
       <div className="flex items-start justify-between gap-4">
-        <p className="text-sm font-medium text-sage-800">
-          {status === 'loading'
-            ? `Searching for ${label} specialists near ${zip}…`
-            : `${label} specialists near ${zip}`}
-        </p>
+        <div>
+          <p className="text-sm font-semibold text-sage-900">
+            {status === 'loading'
+              ? `Searching for ${label} specialists…`
+              : `${label} specialists`}
+          </p>
+          <p className="text-xs text-sage-500">near {zip}</p>
+        </div>
         <div className="flex shrink-0 items-center gap-2">
           {status === 'loading' && <Loader2 className="h-4 w-4 animate-spin text-sage-400" />}
           {status === 'done' && (

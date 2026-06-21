@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import { ComfortAgentWidget } from './ComfortAgentWidget';
 
 type Stage = 'idle' | 'connecting' | 'oncall' | 'pending' | 'launched' | 'scheduled' | 'timed_out' | 'error';
@@ -71,18 +72,23 @@ export function MicConnect() {
   if (stage === 'idle' || stage === 'connecting') {
     return (
       <div className="flex flex-col items-center gap-4 py-6 text-center">
-        <button
-          type="button"
-          onClick={startCall}
-          disabled={stage === 'connecting'}
-          className="flex h-24 w-24 items-center justify-center rounded-full bg-sage-600 text-white shadow-lg transition hover:bg-sage-700 disabled:opacity-60"
-          aria-label="Press to talk"
-        >
-          <svg viewBox="0 0 24 24" fill="currentColor" className="h-10 w-10">
-            <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3Z" />
-            <path d="M19 11a1 1 0 1 0-2 0 5 5 0 0 1-10 0 1 1 0 1 0-2 0 7 7 0 0 0 6 6.92V20H9a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2h-2v-2.08A7 7 0 0 0 19 11Z" />
-          </svg>
-        </button>
+        <div className="relative flex h-24 w-24 items-center justify-center">
+          {stage === 'connecting' && (
+            <span className="absolute inset-0 animate-ping rounded-full bg-sage-400 opacity-40" />
+          )}
+          <button
+            type="button"
+            onClick={startCall}
+            disabled={stage === 'connecting'}
+            className="relative flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-sage-600 to-sky-700 text-white shadow-lg transition hover:scale-105 hover:shadow-xl disabled:opacity-60"
+            aria-label="Press to talk"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" className="h-10 w-10">
+              <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3Z" />
+              <path d="M19 11a1 1 0 1 0-2 0 5 5 0 0 1-10 0 1 1 0 1 0-2 0 7 7 0 0 0 6 6.92V20H9a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2h-2v-2.08A7 7 0 0 0 19 11Z" />
+            </svg>
+          </button>
+        </div>
         <p className="text-sm text-sage-600">
           {stage === 'connecting' ? 'Connecting…' : 'Press to talk — no forms, just tell us what’s going on.'}
         </p>
@@ -108,6 +114,9 @@ export function MicConnect() {
   if (stage === 'pending') {
     return (
       <div className="space-y-3 text-center">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-sage-100 text-sage-600">
+          <CheckCircle2 className="h-6 w-6" />
+        </div>
         <h2 className="text-lg font-semibold text-sage-900">Thank you for sharing that</h2>
         <p className="text-sm text-sage-600">
           We&apos;re finishing up notes from your conversation and getting them ready for a reviewer.
@@ -129,6 +138,9 @@ export function MicConnect() {
   if (stage === 'launched') {
     return (
       <div className="space-y-3 text-center">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-sky-100 text-sky-700">
+          <Loader2 className="h-6 w-6 animate-spin" />
+        </div>
         <h2 className="text-lg font-semibold text-sage-900">Finding someone to look at this…</h2>
         <p className="text-sm text-sage-600">
           We&apos;re still here with you. This page will update automatically once someone has reviewed
@@ -150,6 +162,9 @@ export function MicConnect() {
   if (stage === 'timed_out') {
     return (
       <div className="space-y-3 text-center">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-clay-100 text-clay-500">
+          <AlertCircle className="h-6 w-6" />
+        </div>
         <h2 className="text-lg font-semibold text-sage-900">We&apos;re having trouble finding someone right now</h2>
         <p className="text-sm text-sage-600">
           That&apos;s on us, not you — sometimes no one&apos;s available right away. You can keep
@@ -179,6 +194,9 @@ export function MicConnect() {
   if (stage === 'scheduled' && requestId) {
     return (
       <div className="space-y-4 text-center">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-sage-100 text-sage-600">
+          <CheckCircle2 className="h-6 w-6" />
+        </div>
         <h2 className="text-lg font-semibold text-sage-900">Thank you</h2>
         <p className="text-sm text-sage-600">
           Someone from our research review pool has read through your conversation. They&apos;re a

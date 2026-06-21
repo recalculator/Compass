@@ -31,20 +31,21 @@ export default async function RoadmapPage() {
   return (
     <div className="mx-auto max-w-3xl px-6 py-10">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between overflow-hidden rounded-xl2 bg-gradient-to-br from-sky-700 via-sky-700 to-sage-600 px-8 py-8 text-white shadow-soft">
         <div>
-          <h1 className="text-2xl font-bold text-sage-900">
-            {(profile as ChildProfile)?.child_name}&apos;s Roadmap
+          <p className="text-sm font-medium text-sky-100">The Roadmap</p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight">
+            {(profile as ChildProfile)?.child_name}&apos;s journey
           </h1>
-          <p className="mt-1 text-sm text-sage-600">
-            Everything Compass knows about the journey so far.
+          <p className="mt-2 max-w-md text-sm leading-relaxed text-sky-100">
+            Everything Compass knows so far, and what to do next.
           </p>
         </div>
         <a
           href="/api/roadmap/summary-pdf"
-          className="btn-secondary shrink-0 whitespace-nowrap text-sm"
+          className="shrink-0 whitespace-nowrap rounded-xl2 bg-white/15 px-4 py-2 text-sm font-medium text-white backdrop-blur transition hover:bg-white/25"
         >
-          <Download className="h-4 w-4" />
+          <Download className="mr-1.5 inline h-4 w-4" />
           Download PDF
         </a>
       </div>

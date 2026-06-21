@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Phone, MapPin, ChevronDown, ChevronUp, Loader2, CheckCircle2, AlertCircle, Sparkles, Bookmark, BookmarkCheck } from 'lucide-react';
+import { Phone, MapPin, ChevronDown, ChevronUp, Loader2, CheckCircle2, AlertCircle, Sparkles, Bookmark, BookmarkCheck, Stethoscope } from 'lucide-react';
 
 type SpecialistResult = {
   name: string;
@@ -15,6 +15,19 @@ type SpecialistResult = {
 type SummaryStatus = 'idle' | 'loading' | 'done' | 'error';
 type BookingStatus = 'idle' | 'form' | 'booking' | 'done' | 'error';
 type SaveStatus = 'idle' | 'saving' | 'saved';
+
+const AVATAR_TINTS = ['bg-sage-100 text-sage-700', 'bg-sky-100 text-sky-700', 'bg-clay-100 text-clay-500'];
+
+function avatarTint(name: string) {
+  const hash = name.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+  return AVATAR_TINTS[hash % AVATAR_TINTS.length];
+}
+
+function initials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  return (parts[0][0] + (parts[1]?.[0] ?? '')).toUpperCase();
+}
 
 export function LiveSpecialistCard({
   result,
@@ -126,11 +139,22 @@ export function LiveSpecialistCard({
   }
 
   return (
-    <div className="rounded-xl border border-sage-100 bg-white shadow-softer">
+    <div className="rounded-xl border border-sage-100 bg-white shadow-softer transition hover:shadow-soft">
       {/* Main card row */}
       <div className="flex items-start gap-3 p-4">
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold ${avatarTint(result.name)}`}>
+          {initials(result.name)}
+        </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-sage-900">{result.name}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-semibold text-sage-900">{result.name}</p>
+            {result.specialty && (
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-sage-50 px-2 py-0.5 text-[11px] font-medium text-sage-600">
+                <Stethoscope className="h-3 w-3" />
+                {result.specialty}
+              </span>
+            )}
+          </div>
           <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
             {result.phone && (
               <span className="inline-flex items-center gap-1 text-xs text-sage-500">

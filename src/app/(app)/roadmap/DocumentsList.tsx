@@ -22,15 +22,17 @@ const TYPE_LABELS: Record<string, string> = {
 export function DocumentsList({ documents }: { documents: Doc[] }) {
   const router = useRouter();
   const [removing, setRemoving] = useState<string | null>(null);
-  const [docs, setDocs] = useState(documents);
+  const [removedIds, setRemovedIds] = useState<Set<string>>(new Set());
 
   async function remove(id: string) {
     setRemoving(id);
     await fetch(`/api/documents/${id}`, { method: 'DELETE' });
-    setDocs((prev) => prev.filter((d) => d.id !== id));
+    setRemovedIds((prev) => new Set(prev).add(id));
     setRemoving(null);
     router.refresh();
   }
+
+  const docs = documents.filter((d) => !removedIds.has(d.id));
 
   if (docs.length === 0) return null;
 

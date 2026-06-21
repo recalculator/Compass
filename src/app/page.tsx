@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Map, Search, Users, FileCheck } from 'lucide-react';
+import { Map, Search, Users, FileCheck, HandCoins, Mic } from 'lucide-react';
 import { Logo } from '@/components/ui/Logo';
 
 const FEATURES = [
@@ -13,7 +13,13 @@ const FEATURES = [
     icon: Search,
     title: 'The Directory',
     description:
-      'Find ABA, speech, OT, feeding, and developmental pediatric specialists near you — filtered by insurance and telehealth.',
+      'Find ABA, speech, OT, feeding, and developmental pediatric specialists near you, pulled live from real provider listings.',
+  },
+  {
+    icon: HandCoins,
+    title: 'Benefit Finder',
+    description:
+      'Discover Medicaid waivers, SSI, and state assistance programs matched to your child\'s diagnosis and age — not generic disability lists.',
   },
   {
     icon: Users,
@@ -26,6 +32,12 @@ const FEATURES = [
     title: 'IEP Coach',
     description:
       'Upload your child\'s IEP and get a plain-English walkthrough, flags on anything to question, and questions to bring to your next meeting.',
+  },
+  {
+    icon: Mic,
+    title: 'Connect',
+    description:
+      'Press one button to talk it out with an AI companion any time you need to — no forms, no waiting room.',
   },
 ];
 
@@ -66,9 +78,15 @@ export default function LandingPage() {
         </section>
 
         <section className="mx-auto max-w-6xl px-6 pb-24">
-          <div className="grid gap-6 sm:grid-cols-2">
+          <h2 className="text-center text-2xl font-bold text-sage-900 sm:text-3xl">
+            Everything you need, in one place
+          </h2>
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((feature) => (
-              <div key={feature.title} className="card">
+              <div
+                key={feature.title}
+                className="card transition-transform hover:-translate-y-0.5 hover:shadow-md"
+              >
                 <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl2 bg-sky-100 text-sky-700">
                   <feature.icon className="h-5 w-5" />
                 </div>

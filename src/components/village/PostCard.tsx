@@ -14,6 +14,26 @@ const TOPIC_LABELS: Record<CommunityTopic, string> = {
   general: 'General',
 };
 
+const TOPIC_VARIANTS: Record<CommunityTopic, 'sage' | 'sky' | 'clay' | 'gray'> = {
+  newly_diagnosed: 'clay',
+  iep_help: 'sky',
+  school: 'sky',
+  behavior: 'clay',
+  therapies: 'sage',
+  general: 'gray',
+};
+
+const AVATAR_TINTS = [
+  'bg-sage-200 text-sage-700',
+  'bg-sky-200 text-sky-700',
+  'bg-clay-200 text-clay-500',
+];
+
+function avatarTint(name: string) {
+  const hash = name.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+  return AVATAR_TINTS[hash % AVATAR_TINTS.length];
+}
+
 function relativeTime(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const m = Math.floor(diff / 60_000);
@@ -43,17 +63,19 @@ export function PostCard({ post }: { post: Post; myId?: string }) {
     .slice(0, 2)
     .toUpperCase();
 
+  const topicVariant = TOPIC_VARIANTS[post.topic as CommunityTopic] ?? 'gray';
+
   return (
-    <div className="card space-y-3">
+    <div className="card space-y-3 transition hover:-translate-y-0.5 hover:shadow-md">
       <div className="flex items-start gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sage-200 text-xs font-bold text-sage-700">
+        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold ${avatarTint(authorName)}`}>
           {initials}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm font-semibold text-sage-900">{authorName}</span>
             <span className="text-xs text-sage-400">{relativeTime(post.created_at)}</span>
-            <Badge variant="sky">{TOPIC_LABELS[post.topic as CommunityTopic] ?? post.topic}</Badge>
+            <Badge variant={topicVariant}>{TOPIC_LABELS[post.topic as CommunityTopic] ?? post.topic}</Badge>
           </div>
           <p className="mt-1.5 text-sm leading-relaxed text-sage-700 line-clamp-5">{post.body}</p>
         </div>

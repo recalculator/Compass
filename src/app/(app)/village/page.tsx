@@ -53,10 +53,11 @@ export default async function VillagePage({
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-sage-900">The Village</h1>
-        <p className="mt-1 text-sm text-sage-600">
-          A community for parents who get it. You&apos;re not doing this alone.
+      <div className="mb-6 overflow-hidden rounded-xl2 bg-gradient-to-br from-sage-600 via-sage-600 to-sky-700 px-6 py-7 text-white shadow-soft">
+        <p className="text-sm font-medium text-sage-100">The Village</p>
+        <h1 className="mt-1 text-2xl font-bold tracking-tight">You&apos;re not doing this alone</h1>
+        <p className="mt-1.5 text-sm leading-relaxed text-sage-100">
+          A community of parents who get it. Ask questions, share what worked.
         </p>
       </div>
 

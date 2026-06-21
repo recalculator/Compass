@@ -25,7 +25,7 @@ export default async function AppLayout({
   return (
     <div className="flex min-h-screen bg-sage-50">
       <Sidebar childName={profile.child_name} />
-      <main className="flex-1 overflow-y-auto">{children}</main>
+      <main className="min-w-0 flex-1">{children}</main>
       <FloatingChat />
     </div>
   );

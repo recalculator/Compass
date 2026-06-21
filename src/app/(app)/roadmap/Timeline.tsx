@@ -4,15 +4,20 @@ import { Badge } from '@/components/ui/Badge';
 
 const TYPE_META: Record<
   RoadmapItem['type'],
-  { icon: typeof Stethoscope; label: string; variant: 'sage' | 'sky' | 'clay' | 'gray' }
+  {
+    icon: typeof Stethoscope;
+    label: string;
+    variant: 'sage' | 'sky' | 'clay' | 'gray';
+    dot: string;
+  }
 > = {
-  diagnosis: { icon: Stethoscope, label: 'Diagnosis', variant: 'clay' },
-  evaluation: { icon: ClipboardList, label: 'Evaluation', variant: 'sky' },
-  service_start: { icon: Sparkles, label: 'Service', variant: 'sage' },
-  goal: { icon: Target, label: 'Goal', variant: 'sky' },
-  recommendation: { icon: Lightbulb, label: 'Recommendation', variant: 'gray' },
-  milestone: { icon: Flag, label: 'Milestone', variant: 'gray' },
-  next_step: { icon: Sparkles, label: 'Next Step', variant: 'sage' },
+  diagnosis: { icon: Stethoscope, label: 'Diagnosis', variant: 'clay', dot: 'bg-clay-100 text-clay-500 ring-clay-200' },
+  evaluation: { icon: ClipboardList, label: 'Evaluation', variant: 'sky', dot: 'bg-sky-100 text-sky-700 ring-sky-200' },
+  service_start: { icon: Sparkles, label: 'Service', variant: 'sage', dot: 'bg-sage-100 text-sage-700 ring-sage-200' },
+  goal: { icon: Target, label: 'Goal', variant: 'sky', dot: 'bg-sky-100 text-sky-700 ring-sky-200' },
+  recommendation: { icon: Lightbulb, label: 'Recommendation', variant: 'gray', dot: 'bg-gray-100 text-gray-600 ring-gray-200' },
+  milestone: { icon: Flag, label: 'Milestone', variant: 'gray', dot: 'bg-gray-100 text-gray-600 ring-gray-200' },
+  next_step: { icon: Sparkles, label: 'Next Step', variant: 'sage', dot: 'bg-sage-100 text-sage-700 ring-sage-200' },
 };
 
 export function Timeline({ items }: { items: RoadmapItem[] }) {
@@ -42,8 +47,8 @@ export function Timeline({ items }: { items: RoadmapItem[] }) {
           const meta = TYPE_META[item.type];
           return (
             <li key={item.id} className="relative">
-              <span className="absolute -left-[31px] top-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-white ring-2 ring-sage-100">
-                <meta.icon className="h-3.5 w-3.5 text-sage-600" />
+              <span className={`absolute -left-[31px] top-0.5 flex h-6 w-6 items-center justify-center rounded-full ring-2 ${meta.dot}`}>
+                <meta.icon className="h-3.5 w-3.5" />
               </span>
               <div className="flex items-center gap-2">
                 <Badge variant={meta.variant}>{meta.label}</Badge>

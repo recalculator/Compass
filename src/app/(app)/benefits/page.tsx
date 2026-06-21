@@ -36,10 +36,14 @@ export default async function BenefitsPage({
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-10">
-      <h1 className="text-2xl font-bold text-sage-900">Benefit Finder</h1>
-      <p className="mt-1 text-sm text-sage-600">
-        State programs, Medicaid waivers, SSI, and disability services for your child.
-      </p>
+      <div className="overflow-hidden rounded-xl2 bg-gradient-to-br from-clay-400 via-clay-400 to-sage-600 px-8 py-8 text-white shadow-soft">
+        <p className="text-sm font-medium text-clay-50">Benefit Finder</p>
+        <h1 className="mt-1 text-2xl font-bold tracking-tight">Find programs you may qualify for</h1>
+        <p className="mt-2 max-w-md text-sm leading-relaxed text-clay-50">
+          State programs, Medicaid waivers, SSI, and disability services matched to your
+          child&apos;s diagnosis and age.
+        </p>
+      </div>
 
       {/* Tabs */}
       <div className="mt-6 flex gap-1 border-b border-sage-100">

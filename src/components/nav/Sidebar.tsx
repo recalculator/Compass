@@ -20,7 +20,7 @@ export function Sidebar({ childName }: { childName?: string }) {
   const pathname = usePathname();
 
   return (
-    <aside className="flex h-screen w-60 flex-col border-r border-sage-100 bg-white px-4 py-6">
+    <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-sage-100 bg-white px-4 py-6">
       <div className="px-2">
         <Logo />
       </div>
