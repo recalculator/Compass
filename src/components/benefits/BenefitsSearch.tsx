@@ -19,6 +19,8 @@ export function BenefitsSearch({
   locationState: string;
   diagnoses: string[];
 }) {
+  const cacheKey = `benefits-search:${locationState}:${diagnoses.join('|')}`;
+
   const [status, setStatus] = useState<Status>('loading');
   const [benefits, setBenefits] = useState<BenefitResult[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -38,15 +40,26 @@ export function BenefitsSearch({
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? 'Search failed');
-      setBenefits(json.benefits ?? []);
+      const results: BenefitResult[] = json.benefits ?? [];
+      setBenefits(results);
       setStatus('done');
+      sessionStorage.setItem(cacheKey, JSON.stringify(results));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
       setStatus('error');
     }
   }
 
-  useEffect(() => { search(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+      setBenefits(JSON.parse(cached));
+      setStatus('done');
+      return;
+    }
+    search();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cacheKey]);
 
   return (
     <div className="mt-6 card">
