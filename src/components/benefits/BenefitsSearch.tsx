@@ -43,7 +43,7 @@ export function BenefitsSearch({
       const results: BenefitResult[] = json.benefits ?? [];
       setBenefits(results);
       setStatus('done');
-      sessionStorage.setItem(cacheKey, JSON.stringify(results));
+      localStorage.setItem(cacheKey, JSON.stringify(results));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
       setStatus('error');
@@ -51,7 +51,7 @@ export function BenefitsSearch({
   }
 
   useEffect(() => {
-    const cached = sessionStorage.getItem(cacheKey);
+    const cached = localStorage.getItem(cacheKey);
     if (cached) {
       setBenefits(JSON.parse(cached));
       setStatus('done');
@@ -60,6 +60,11 @@ export function BenefitsSearch({
     search();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cacheKey]);
+
+  useEffect(() => {
+    if (status === 'done') localStorage.setItem(cacheKey, JSON.stringify(benefits));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [benefits]);
 
   return (
     <div className="mt-6 card">
