@@ -7,11 +7,11 @@ export default async function ConnectCallPage({ params }: { params: { id: string
 
   const { data: row } = await supabase
     .from('expert_call_requests')
-    .select('status, room_url')
+    .select('room_url')
     .eq('id', params.id)
     .maybeSingle();
 
-  if (!row || row.status !== 'scheduled' || !row.room_url) {
+  if (!row || !row.room_url) {
     redirect('/connect');
   }
 

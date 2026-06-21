@@ -1,12 +1,13 @@
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { AnnotationForm } from '@/components/annotate/AnnotationForm';
+import { JoinCallButton } from '@/components/annotate/JoinCallButton';
 
 export default async function AnnotatePage({ params }: { params: { requestId: string } }) {
   const supabase = createServiceRoleClient();
 
   const { data: request } = await supabase
     .from('expert_call_requests')
-    .select('id')
+    .select('id, room_url')
     .eq('id', params.requestId)
     .maybeSingle();
 
@@ -38,6 +39,19 @@ export default async function AnnotatePage({ params }: { params: { requestId: st
         AI&apos;s summary of that conversation — your job is to read it and tell us how clear and
         accurate it is, and improve it if you can. No medical or specialist knowledge is needed.
       </p>
+
+      {request.room_url && (
+        <div className="card mt-6">
+          <h2 className="text-lg font-semibold text-sage-900">Talk to this parent directly</h2>
+          <p className="mt-1 text-sm text-sage-600">
+            If you&apos;d rather talk it through live, you can join the same call room the parent
+            is using.
+          </p>
+          <div className="mt-4">
+            <JoinCallButton roomUrl={request.room_url} />
+          </div>
+        </div>
+      )}
 
       {!callNotes ? (
         <div className="card mt-6">

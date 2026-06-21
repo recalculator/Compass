@@ -103,6 +103,15 @@ export function MicConnect() {
           We&apos;re finishing up notes from your conversation and getting them ready for a reviewer.
           This usually takes under a minute.
         </p>
+        {requestId && (
+          <p className="text-sm text-sage-600">
+            You can also hop into the call room now and wait there — we&apos;ll bring a reviewer in
+            as soon as one&apos;s ready.{' '}
+            <a href={`/connect/${requestId}/call`} className="font-medium text-sage-700 underline">
+              Join the call room
+            </a>
+          </p>
+        )}
       </div>
     );
   }
@@ -115,6 +124,15 @@ export function MicConnect() {
           We&apos;re still here with you. This page will update automatically once someone has reviewed
           your conversation.
         </p>
+        {requestId && (
+          <p className="text-sm text-sage-600">
+            You can hop into the call room now and wait there — we&apos;ll bring a reviewer in as
+            soon as one&apos;s ready.{' '}
+            <a href={`/connect/${requestId}/call`} className="font-medium text-sage-700 underline">
+              Join the call room
+            </a>
+          </p>
+        )}
       </div>
     );
   }
@@ -135,6 +153,15 @@ export function MicConnect() {
             Browse directory
           </a>
         </div>
+        {requestId && (
+          <p className="text-sm text-sage-600">
+            You can also{' '}
+            <a href={`/connect/${requestId}/call`} className="font-medium text-sage-700 underline">
+              wait in the call room
+            </a>{' '}
+            in case someone joins.
+          </p>
+        )}
       </div>
     );
   }
