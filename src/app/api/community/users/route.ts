@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   const q = (searchParams.get('q') ?? '').trim();
 
   const db = createServiceRoleClient();
-  let query = db.from('users').select('id, full_name').neq('id', user.id).limit(10);
+  let query = db.from('users').select('id, full_name').neq('id', user.id).limit(200);
   if (q) query = query.ilike('full_name', `%${q}%`);
   query = query.order('full_name', { ascending: true });
 

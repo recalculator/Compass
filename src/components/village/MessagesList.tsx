@@ -31,10 +31,6 @@ function NewMessageSearch() {
   const [searching, setSearching] = useState(false);
 
   useEffect(() => {
-    if (!query.trim()) {
-      setResults([]);
-      return;
-    }
     setSearching(true);
     const handle = setTimeout(() => {
       fetch(`/api/community/users?q=${encodeURIComponent(query.trim())}`)
@@ -53,7 +49,7 @@ function NewMessageSearch() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search for a parent to message…"
+          placeholder="Search, or scroll to see everyone registered…"
           className="input-field pl-9"
         />
         {searching && (
@@ -62,7 +58,7 @@ function NewMessageSearch() {
       </div>
 
       {results.length > 0 && (
-        <div className="mt-2 space-y-1.5">
+        <div className="mt-2 max-h-80 space-y-1.5 overflow-y-auto">
           {results.map((u) => (
             <Link
               key={u.id}
@@ -78,8 +74,10 @@ function NewMessageSearch() {
         </div>
       )}
 
-      {query.trim() && !searching && results.length === 0 && (
-        <p className="mt-2 text-xs text-sage-400">No one found matching &quot;{query}&quot;.</p>
+      {!searching && results.length === 0 && (
+        <p className="mt-2 text-xs text-sage-400">
+          {query.trim() ? `No one found matching "${query}".` : 'No other parents registered yet.'}
+        </p>
       )}
     </div>
   );
