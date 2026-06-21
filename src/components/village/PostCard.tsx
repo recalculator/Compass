@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { MessageCircle, Mail } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import type { CommunityTopic } from '@/lib/types';
 
@@ -34,7 +34,7 @@ type Post = {
   author: { id: string; full_name: string } | null;
 };
 
-export function PostCard({ post, myId }: { post: Post; myId?: string }) {
+export function PostCard({ post }: { post: Post; myId?: string }) {
   const authorName = post.author?.full_name ?? 'A parent';
   const initials = authorName
     .split(' ')
@@ -42,35 +42,16 @@ export function PostCard({ post, myId }: { post: Post; myId?: string }) {
     .join('')
     .slice(0, 2)
     .toUpperCase();
-  const isOwnPost = post.author?.id === myId;
 
   return (
     <div className="card space-y-3">
       <div className="flex items-start gap-3">
-        {!isOwnPost && post.author ? (
-          <Link
-            href={`/village/messages/${post.author.id}`}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sage-200 text-xs font-bold text-sage-700 hover:bg-sage-300"
-          >
-            {initials}
-          </Link>
-        ) : (
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sage-200 text-xs font-bold text-sage-700">
-            {initials}
-          </div>
-        )}
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sage-200 text-xs font-bold text-sage-700">
+          {initials}
+        </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            {!isOwnPost && post.author ? (
-              <Link
-                href={`/village/messages/${post.author.id}`}
-                className="text-sm font-semibold text-sage-900 hover:underline"
-              >
-                {authorName}
-              </Link>
-            ) : (
-              <span className="text-sm font-semibold text-sage-900">{authorName}</span>
-            )}
+            <span className="text-sm font-semibold text-sage-900">{authorName}</span>
             <span className="text-xs text-sage-400">{relativeTime(post.created_at)}</span>
             <Badge variant="sky">{TOPIC_LABELS[post.topic as CommunityTopic] ?? post.topic}</Badge>
           </div>
@@ -86,15 +67,6 @@ export function PostCard({ post, myId }: { post: Post; myId?: string }) {
           <MessageCircle className="h-3.5 w-3.5" />
           Reply
         </Link>
-        {!isOwnPost && post.author && (
-          <Link
-            href={`/village/messages/${post.author.id}`}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-sage-500 hover:text-sage-700"
-          >
-            <Mail className="h-3.5 w-3.5" />
-            Message
-          </Link>
-        )}
       </div>
     </div>
   );

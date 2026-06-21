@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Mail } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { requireUser } from '@/lib/auth/requireUser';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { Badge } from '@/components/ui/Badge';
@@ -19,7 +19,6 @@ const TOPIC_LABELS: Record<CommunityTopic, string> = {
 export default async function PostPage({ params }: { params: { id: string } }) {
   const auth = await requireUser();
   if ('error' in auth) redirect('/login');
-  const { user } = auth;
 
   const db = createServiceRoleClient();
 
@@ -38,7 +37,6 @@ export default async function PostPage({ params }: { params: { id: string } }) {
     .order('created_at', { ascending: true });
 
   const author = (post.author as unknown) as { id: string; full_name: string } | null;
-  const isOwnPost = author?.id === user.id;
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
@@ -53,27 +51,7 @@ export default async function PostPage({ params }: { params: { id: string } }) {
           <span className="text-xs text-sage-400">{new Date(post.created_at).toLocaleDateString()}</span>
         </div>
         <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-sage-700">{post.body}</p>
-        <div className="mt-3 flex items-center justify-between">
-          <p className="text-xs text-sage-400">
-            —{' '}
-            {!isOwnPost && author ? (
-              <Link href={`/village/messages/${author.id}`} className="hover:underline">
-                {author.full_name}
-              </Link>
-            ) : (
-              author?.full_name ?? 'A parent'
-            )}
-          </p>
-          {!isOwnPost && author && (
-            <Link
-              href={`/village/messages/${author.id}`}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-sage-500 hover:text-sage-700"
-            >
-              <Mail className="h-3.5 w-3.5" />
-              Message {author.full_name.split(' ')[0]}
-            </Link>
-          )}
-        </div>
+        <p className="mt-3 text-xs text-sage-400">— {author?.full_name ?? 'A parent'}</p>
       </div>
 
       <div className="mt-6">
