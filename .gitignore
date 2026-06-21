@@ -29,6 +29,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# generated eval output
+/scripts/generated/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

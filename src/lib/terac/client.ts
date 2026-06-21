@@ -40,9 +40,31 @@ export function createOpportunity(params: CreateOpportunityParams) {
   });
 }
 
-export function launchOpportunity(opportunityId: string) {
-  return teracRequest<Opportunity>(`/opportunities/${opportunityId}/launch`, {
+// Hard cost cap — launchOpportunity refuses to call Terac's launch endpoint
+// (which spends real money) above this total. Confirmed real floor price is
+// ~$16.50 for num_participants: 1 with no filters; $20 leaves headroom for
+// that floor while still blocking anything abnormally expensive (e.g. the
+// $162 specialist-filtered opportunity from earlier testing).
+const MAX_LAUNCH_COST_CENTS = 2000;
+
+export function launchOpportunity(opportunity: Pick<Opportunity, 'id' | 'pricing'>): Promise<TeracResult<Opportunity>> {
+  const totalCostCents = opportunity.pricing?.total_cost_cents;
+
+  if (typeof totalCostCents !== 'number') {
+    const error = `Refusing to launch opportunity ${opportunity.id}: no pricing data on the opportunity, cannot verify cost.`;
+    console.error('[terac/client] launch blocked:', error);
+    return Promise.resolve({ ok: false, error });
+  }
+
+  if (totalCostCents > MAX_LAUNCH_COST_CENTS) {
+    const error = `Refusing to launch opportunity ${opportunity.id}: total cost $${(totalCostCents / 100).toFixed(2)} exceeds the $${(MAX_LAUNCH_COST_CENTS / 100).toFixed(2)} cap.`;
+    console.error('[terac/client] launch blocked:', error);
+    return Promise.resolve({ ok: false, error });
+  }
+
+  return teracRequest<Opportunity>(`/opportunities/${opportunity.id}/launch`, {
     method: 'POST',
+    body: '{}',
   });
 }
 
@@ -58,5 +80,6 @@ export function getSubmission(submissionId: string) {
 export function approveSubmission(submissionId: string) {
   return teracRequest<{ id: string; status: string }>(`/submissions/${submissionId}/approve`, {
     method: 'POST',
+    body: '{}',
   });
 }

@@ -35,11 +35,18 @@ export type CreateOpportunityParams = {
 
 export type OpportunityStatus = 'draft' | 'active' | 'fulfilled' | 'paused' | 'stopped' | 'completed';
 
+export type OpportunityPricing = {
+  cost_per_participant_cents: number;
+  total_cost_cents: number;
+  currency: string;
+};
+
 export type Opportunity = {
   id: string;
   title: string;
   status: OpportunityStatus;
   num_participants: number;
+  pricing: OpportunityPricing;
 };
 
 export type SubmissionStatus = 'in_progress' | 'awaiting_review' | 'approved' | 'rejected';

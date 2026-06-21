@@ -1,35 +1,26 @@
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import { requireUser } from '@/lib/auth/requireUser';
 import { getCurrentChild } from '@/lib/child/getCurrentChild';
 import { createCallRoom } from '@/lib/daily/client';
-import { createOpportunity, launchOpportunity } from '@/lib/terac/client';
-import { buildHealthcareProviderFilters, buildScreeningQuestions } from '@/lib/terac/screening';
 
-const requestSchema = z.object({
-  topic: z.string().trim().min(1, 'Tell us what you need help with.').max(1000),
-});
-
-const CALL_DURATION_MINUTES = 30;
 const ROOM_EXPIRY_MINUTES = 120;
 
-export async function POST(request: Request) {
+// Creates the request row and the Daily call room (used later for an
+// optional human "join call" link) the moment the parent presses the mic
+// button. The Terac opportunity itself isn't created here anymore — it
+// can't be, since there's no topic yet. It's created once the intake
+// conversation ends and Vapi's end-of-call webhook delivers a summary
+// (see /api/vapi/webhook).
+export async function POST() {
   const auth = await requireUser();
   if ('error' in auth) return auth.error;
   const { user, supabase } = auth;
-
-  const body = await request.json();
-  const parsed = requestSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 });
-  }
-  const { topic } = parsed.data;
 
   const child = await getCurrentChild(supabase, user.id);
 
   const { data: row, error: insertError } = await supabase
     .from('expert_call_requests')
-    .insert({ user_id: user.id, child_id: child?.id ?? null, topic, status: 'pending' })
+    .insert({ user_id: user.id, child_id: child?.id ?? null, status: 'pending' })
     .select('id')
     .single();
 
@@ -39,12 +30,23 @@ export async function POST(request: Request) {
 
   const requestId = row.id as string;
 
-  const roomResult = await createCallRoom({
-    expertCallRequestId: requestId,
-    expiresInMinutes: ROOM_EXPIRY_MINUTES,
-  });
+  let roomResult: Awaited<ReturnType<typeof createCallRoom>>;
+  try {
+    roomResult = await createCallRoom({
+      expertCallRequestId: requestId,
+      expiresInMinutes: ROOM_EXPIRY_MINUTES,
+    });
+  } catch (err) {
+    console.error('[connect/request] createCallRoom threw:', err);
+    await supabase
+      .from('expert_call_requests')
+      .update({ status: 'failed', error_message: err instanceof Error ? err.message : String(err) })
+      .eq('id', requestId);
+    return NextResponse.json({ error: `Daily call failed: ${err instanceof Error ? err.message : String(err)}` }, { status: 500 });
+  }
 
   if (!roomResult.ok) {
+    console.error('[connect/request] createCallRoom failed:', roomResult.error);
     await supabase
       .from('expert_call_requests')
       .update({ status: 'failed', error_message: roomResult.error })
@@ -52,65 +54,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: roomResult.error }, { status: 500 });
   }
 
-  const opportunityResult = await createOpportunity({
-    title: 'Live parent consult: special needs support',
-    internal_title: `Compass live consult — request ${requestId}`,
-    description: topic,
-    project_id: process.env.TERAC_PROJECT_ID!,
-    num_participants: 3,
-    business_type: 'b2c',
-    expected_days_to_complete: 5,
-    filters: buildHealthcareProviderFilters(),
-    screening_questions: buildScreeningQuestions(),
-    tasks: [
-      {
-        sequence: 1,
-        task_type: 'interview',
-        review_type: 'manual_review',
-        task_url: roomResult.roomUrl,
-        duration_minutes: CALL_DURATION_MINUTES,
-        title: 'Live video consult',
-        description: topic,
-      },
-    ],
-  });
-
-  if (!opportunityResult.ok) {
-    await supabase
-      .from('expert_call_requests')
-      .update({
-        status: 'failed',
-        error_message: opportunityResult.error,
-        room_url: roomResult.roomUrl,
-        room_name: roomResult.roomName,
-      })
-      .eq('id', requestId);
-    return NextResponse.json({ error: opportunityResult.error }, { status: 500 });
-  }
-
-  const launchResult = await launchOpportunity(opportunityResult.data.id);
-  if (!launchResult.ok) {
-    await supabase
-      .from('expert_call_requests')
-      .update({
-        status: 'failed',
-        error_message: launchResult.error,
-        room_url: roomResult.roomUrl,
-        room_name: roomResult.roomName,
-        terac_opportunity_id: opportunityResult.data.id,
-      })
-      .eq('id', requestId);
-    return NextResponse.json({ error: launchResult.error }, { status: 500 });
-  }
-
   await supabase
     .from('expert_call_requests')
-    .update({
-      status: 'launched',
-      room_url: roomResult.roomUrl,
-      room_name: roomResult.roomName,
-      terac_opportunity_id: opportunityResult.data.id,
-    })
+    .update({ room_url: roomResult.roomUrl, room_name: roomResult.roomName })
     .eq('id', requestId);
 
   return NextResponse.json({ requestId });

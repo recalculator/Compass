@@ -1,0 +1,34 @@
+[
+  {
+    "id": "school-meltdown",
+    "transcript": "Assistant: What's going on that you'd like help with today?\nParent: My son has been having huge meltdowns every morning before school. He's 7, autistic, nonverbal-ish, uses some signs. It's been happening for about three weeks.\nAssistant: That sounds exhausting. Has anything changed recently at school or at home?\nParent: They moved his classroom two weeks ago, and I think the new room is louder. We tried noise-canceling headphones but he won't keep them on.\nAssistant: Have you talked to the school about going back to the old room or another option?\nParent: I emailed his teacher but haven't heard back yet. I don't really know what to ask for."
+  },
+  {
+    "id": "sleep-regression",
+    "transcript": "Assistant: What's been the hardest part lately?\nParent: My daughter is 5, has Down syndrome, and she used to sleep through the night but for the last month she's waking up at 2am and won't go back to sleep.\nAssistant: Has anything in her routine changed around when this started?\nParent: We did just start a new med for her thyroid around then, actually. I hadn't connected those.\nAssistant: That's worth mentioning to her doctor. Have you mentioned the sleep change to them yet?\nParent: No, I haven't called yet. I wasn't sure if it was related or just a phase."
+  },
+  {
+    "id": "iep-meeting-anxiety",
+    "transcript": "Assistant: What's on your mind today?\nParent: I have an IEP meeting next week for my son and I'm really anxious. Last year I felt like they just told me what they decided and I didn't push back.\nAssistant: What would you want to be different this time?\nParent: I want to actually understand what services he's getting and ask for more speech therapy, he's 9 and still has a really hard time being understood.\nAssistant: Do you have his current IEP goals written down anywhere you could bring?\nParent: I have the document somewhere but honestly haven't reread it since last year."
+  },
+  {
+    "id": "sibling-jealousy",
+    "transcript": "Assistant: What's been going on at home?\nParent: My older daughter, she's 10, has been acting out a lot. I think she's jealous of how much attention her younger brother gets, he has cerebral palsy and needs a lot of physical therapy support.\nAssistant: Has she said anything directly about how she's feeling?\nParent: A little. She said once that I never come to her stuff anymore. That kind of broke my heart.\nAssistant: Have you been able to carve out any one-on-one time with her recently?\nParent: Not really, between his appointments and work it's been hard to find time."
+  },
+  {
+    "id": "communication-frustration",
+    "transcript": "Assistant: What would be most helpful to talk through?\nParent: My son is 4, nonverbal, and lately he's been biting himself when he can't get something across. It's new in the last couple weeks.\nAssistant: Has he had any communication tools introduced recently, like a device or picture system?\nParent: We started a basic picture board at home about a month ago but he barely uses it.\nAssistant: Has anyone shown you or him how to use it together, like a speech therapist modeling it?\nParent: Not really, the school just sent it home with a one-page instruction sheet."
+  },
+  {
+    "id": "diagnosis-fresh",
+    "transcript": "Assistant: What's happening that brought you here today?\nParent: We just got my daughter's autism diagnosis two days ago, she's 3. I don't even know where to start.\nAssistant: That's a lot to take in all at once. Has the team given you any next steps yet?\nParent: They mentioned early intervention but said I have to call myself to set it up and I haven't done it yet, I'm still kind of in shock.\nAssistant: That's completely understandable. Is there a specific worry that's loudest for you right now?\nParent: Mostly just whether I'm going to mess this up by not knowing what I'm doing."
+  },
+  {
+    "id": "school-refusal-teen",
+    "transcript": "Assistant: What's been hardest lately?\nParent: My son is 14, has ADHD and an anxiety disorder, and for the past two weeks he's refusing to go to school, just stays in his room.\nAssistant: Has something specific happened at school recently?\nParent: He mentioned getting made fun of in gym class a few weeks ago but didn't want to talk more about it.\nAssistant: Have you been able to loop in the school counselor at all?\nParent: I called once and left a voicemail but no callback yet."
+  },
+  {
+    "id": "respite-burnout",
+    "transcript": "Assistant: What's on your mind today?\nParent: Honestly I'm just burned out. My son is 12, has a rare genetic condition, needs help with basically everything, and I haven't had a break in months.\nAssistant: Do you have any respite care or family support you can call on?\nParent: My sister offered once but I felt too guilty to take her up on it. I don't know where to even find respite care otherwise.\nAssistant: Have you looked into whether your state's Medicaid waiver covers respite hours?\nParent: I've heard the term but have no idea how that process works or if we qualify."
+  }
+]
