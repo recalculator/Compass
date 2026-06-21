@@ -70,7 +70,7 @@ export function ComingUp({ alerts }: { alerts: MilestoneAlert[] }) {
       ) : (
         <ol className="relative mt-4 space-y-5 border-l-2 border-sage-100 pl-6">
           {sorted.map((alert) => (
-            <li key={alert.id} className="relative">
+            <li key={alert.id} className="relative rounded-r-xl border-l-4 border-[#e6b893] bg-white py-3 pr-3 pl-4 shadow-softer" style={{marginLeft: '-1.5rem', paddingLeft: '1rem'}}>
               <span className="absolute -left-[31px] top-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-white ring-2 ring-sage-100">
                 <CalendarClock className="h-3.5 w-3.5 text-sage-600" />
               </span>

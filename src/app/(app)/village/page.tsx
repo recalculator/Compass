@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { requireUser } from '@/lib/auth/requireUser';
 import { redirect } from 'next/navigation';
 import { createServiceRoleClient } from '@/lib/supabase/server';
@@ -98,9 +99,25 @@ export default async function VillagePage({
           <PostCard key={post.id} post={post} myId={user.id} />
         ))}
         {posts.length === 0 && (
-          <p className="py-10 text-center text-sm text-sage-500">
-            No posts yet{topic ? ' in this topic' : ''}. Be the first to share.
-          </p>
+          <div className="flex flex-col items-center gap-4 py-10 text-center">
+            <Image
+              src="/assets/empty-village.png"
+              alt="No posts yet"
+              width={160}
+              height={160}
+              className="opacity-90"
+            />
+            <div>
+              <p className="font-medium text-sage-800">
+                {topic ? 'Nothing here yet' : 'Be the first to share'}
+              </p>
+              <p className="mt-1 text-sm text-sage-500">
+                {topic
+                  ? 'No posts in this topic yet. Start the conversation.'
+                  : 'This community is yours. Ask a question, share what worked, or just say hi.'}
+              </p>
+            </div>
+          </div>
         )}
       </div>
     </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { UploadCloud, Loader2, AlertTriangle, HelpCircle, MessageCircleQuestion } from 'lucide-react';
+import { UploadCloud, Loader2, AlertTriangle, HelpCircle, MessageCircleQuestion, Volume2 } from 'lucide-react';
 import type { IepAnalysis } from '@/lib/claude/iep-coach';
 
 export function IepCoachClient() {
@@ -84,7 +84,17 @@ export function IepCoachClient() {
             <div className="mt-4 space-y-5">
               {analysis.sections.map((section, i) => (
                 <div key={i} className="border-b border-sage-100 pb-4 last:border-0 last:pb-0">
-                  <h4 className="font-semibold text-sage-800">{section.section_title}</h4>
+                  <div className="flex items-center justify-between gap-3">
+                    <h4 className="font-semibold text-sage-800">{section.section_title}</h4>
+                    <button
+                      type="button"
+                      className="btn-ghost shrink-0 gap-1.5 text-xs"
+                      aria-label={`Listen to ${section.section_title}`}
+                    >
+                      <Volume2 className="h-3.5 w-3.5" />
+                      Listen
+                    </button>
+                  </div>
                   <p className="mt-1 text-sm text-sage-600">{section.plain_english}</p>
                   {section.flag.level && (
                     <div className="mt-2 flex items-start gap-2 rounded-xl2 bg-clay-50 px-3 py-2 text-sm text-clay-500">

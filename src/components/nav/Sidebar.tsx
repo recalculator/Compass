@@ -20,7 +20,7 @@ export function Sidebar({ childName }: { childName?: string }) {
   const pathname = usePathname();
 
   return (
-    <aside className="flex h-screen w-60 flex-col border-r border-sage-100 bg-white px-4 py-6">
+    <aside className="flex h-screen w-60 flex-col border-r border-sage-100 bg-[#fdf8f4] px-4 py-6">
       <div className="px-2">
         <Logo />
       </div>
@@ -45,7 +45,7 @@ export function Sidebar({ childName }: { childName?: string }) {
               className={clsx(
                 'flex items-center gap-3 rounded-xl2 px-3 py-2.5 text-sm font-medium transition',
                 active
-                  ? 'bg-sage-600 text-white'
+                  ? 'bg-sage-100 text-sage-800 font-semibold'
                   : 'text-sage-600 hover:bg-sage-50'
               )}
             >
