@@ -48,6 +48,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'No child profile found. Finish onboarding first.' }, { status: 400 });
   }
 
+  const { data: existing } = await supabase
+    .from('documents')
+    .select('id')
+    .eq('child_id', profile.id)
+    .eq('file_name', file.name)
+    .maybeSingle();
+
+  if (existing) {
+    return NextResponse.json(
+      { error: `"${file.name}" has already been uploaded. Remove it first if you want to replace it.` },
+      { status: 409 }
+    );
+  }
+
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
   const base64 = buffer.toString('base64');
@@ -144,6 +158,14 @@ export async function POST(request: Request) {
           ),
         })
         .eq('id', profile.id);
+    }
+
+    const locationPatch: Record<string, string> = {};
+    if (extracted.location?.zip && !profile.location_zip) locationPatch.location_zip = extracted.location.zip;
+    if (extracted.location?.city && !profile.location_city) locationPatch.location_city = extracted.location.city;
+    if (extracted.location?.state && !profile.location_state) locationPatch.location_state = extracted.location.state;
+    if (Object.keys(locationPatch).length > 0) {
+      await supabase.from('child_profiles').update(locationPatch).eq('id', profile.id);
     }
 
     return NextResponse.json({ document: { ...doc, extracted_data: extracted, status: 'complete' } });

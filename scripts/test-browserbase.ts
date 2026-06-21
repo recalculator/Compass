@@ -21,34 +21,39 @@
 
 const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
 
-async function testSpecialists() {
-  console.log('\n=== findSpecialists("94720", "Occupational Therapy") ===');
-  const res = await fetch(`${BASE}/api/search/specialists`, {
+async function callRoute(path: string, body: Record<string, string>) {
+  const res = await fetch(`${BASE}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ zipCode: '94720', specialtyType: 'Occupational Therapy' }),
+    body: JSON.stringify(body),
   });
-  const data = await res.json();
-  if (!res.ok) {
-    console.error('Error:', data.error);
-    return;
+  const text = await res.text();
+  try {
+    return { ok: res.ok, status: res.status, data: JSON.parse(text) };
+  } catch {
+    console.error(`Non-JSON response (${res.status}):\n${text.slice(0, 1000)}`);
+    return { ok: false, status: res.status, data: null };
   }
+}
+
+async function testSpecialists() {
+  console.log('\n=== findSpecialists("94720", "Occupational Therapy") ===');
+  const { ok, data } = await callRoute('/api/search/specialists', {
+    zipCode: '94720',
+    specialtyType: 'Occupational Therapy',
+  });
+  if (!ok || !data) { console.error('Error:', data?.error); return; }
   console.log(JSON.stringify(data.specialists, null, 2));
   console.log(`Found ${data.specialists?.length ?? 0} specialists.`);
 }
 
 async function testBenefits() {
   console.log('\n=== findBenefits("94720", "autism") ===');
-  const res = await fetch(`${BASE}/api/search/benefits`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ zipCode: '94720', diagnosisTag: 'autism' }),
+  const { ok, data } = await callRoute('/api/search/benefits', {
+    zipCode: '94720',
+    diagnosisTag: 'autism',
   });
-  const data = await res.json();
-  if (!res.ok) {
-    console.error('Error:', data.error);
-    return;
-  }
+  if (!ok || !data) { console.error('Error:', data?.error); return; }
   console.log(JSON.stringify(data.benefits, null, 2));
   console.log(`Found ${data.benefits?.length ?? 0} programs.`);
 }

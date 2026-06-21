@@ -1,7 +1,8 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
-import { createClient } from '@/lib/supabase/server';
+import { ArrowLeft, Mail } from 'lucide-react';
+import { requireUser } from '@/lib/auth/requireUser';
+import { createServiceRoleClient } from '@/lib/supabase/server';
 import { Badge } from '@/components/ui/Badge';
 import { CommentThread } from '@/components/village/CommentThread';
 import type { CommunityTopic } from '@/lib/types';
@@ -16,24 +17,31 @@ const TOPIC_LABELS: Record<CommunityTopic, string> = {
 };
 
 export default async function PostPage({ params }: { params: { id: string } }) {
-  const supabase = createClient();
+  const auth = await requireUser();
+  if ('error' in auth) redirect('/login');
+  const { user } = auth;
 
-  const { data: post } = await supabase
+  const db = createServiceRoleClient();
+
+  const { data: post } = await db
     .from('community_posts')
-    .select('*, author:users(full_name)')
+    .select('id, title, body, topic, created_at, author_id, author:users!author_id(id, full_name)')
     .eq('id', params.id)
     .maybeSingle();
 
   if (!post) notFound();
 
-  const { data: comments } = await supabase
+  const { data: comments } = await db
     .from('community_comments')
-    .select('*, author:users(full_name)')
+    .select('*, author:users!author_id(full_name)')
     .eq('post_id', params.id)
     .order('created_at', { ascending: true });
 
+  const author = (post.author as unknown) as { id: string; full_name: string } | null;
+  const isOwnPost = author?.id === user.id;
+
   return (
-    <div className="mx-auto max-w-3xl px-6 py-10">
+    <div className="mx-auto max-w-2xl px-4 py-8">
       <Link href="/village" className="inline-flex items-center gap-1.5 text-sm font-medium text-sage-600 hover:underline">
         <ArrowLeft className="h-4 w-4" />
         Back to the Village
@@ -44,11 +52,19 @@ export default async function PostPage({ params }: { params: { id: string } }) {
           <Badge variant="sky">{TOPIC_LABELS[post.topic as CommunityTopic]}</Badge>
           <span className="text-xs text-sage-400">{new Date(post.created_at).toLocaleDateString()}</span>
         </div>
-        <h1 className="mt-2 text-xl font-bold text-sage-900">{post.title}</h1>
-        <p className="mt-3 whitespace-pre-wrap text-sm text-sage-700">{post.body}</p>
-        <p className="mt-3 text-xs text-sage-400">
-          — {(post.author as { full_name: string } | null)?.full_name ?? 'A parent'}
-        </p>
+        <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-sage-700">{post.body}</p>
+        <div className="mt-3 flex items-center justify-between">
+          <p className="text-xs text-sage-400">— {author?.full_name ?? 'A parent'}</p>
+          {!isOwnPost && author && (
+            <Link
+              href={`/village/messages/${author.id}`}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-sage-500 hover:text-sage-700"
+            >
+              <Mail className="h-3.5 w-3.5" />
+              Message {author.full_name.split(' ')[0]}
+            </Link>
+          )}
+        </div>
       </div>
 
       <div className="mt-6">

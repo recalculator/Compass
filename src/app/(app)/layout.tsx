@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentChild } from '@/lib/child/getCurrentChild';
 import { Sidebar } from '@/components/nav/Sidebar';
+import { FloatingChat } from '@/components/chat/FloatingChat';
 
 export default async function AppLayout({
   children,
@@ -25,6 +26,7 @@ export default async function AppLayout({
     <div className="flex min-h-screen bg-sage-50">
       <Sidebar childName={profile.child_name} />
       <main className="flex-1 overflow-y-auto">{children}</main>
+      <FloatingChat />
     </div>
   );
 }

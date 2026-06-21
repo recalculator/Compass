@@ -10,10 +10,11 @@ const EXTRACTION_SYSTEM_PROMPT = `You are a careful clinical-document reader hel
   "current_services": [{ "name": "string", "provider": "string or omit", "frequency": "string or omit" }],
   "goals": [{ "area": "string e.g. Communication", "goal": "string, the specific goal text" }],
   "recommendations": ["string", ...],
-  "important_dates": [{ "label": "string e.g. Next IEP review", "date": "YYYY-MM-DD" }]
+  "important_dates": [{ "label": "string e.g. Next IEP review", "date": "YYYY-MM-DD" }],
+  "location": { "zip": "5-digit ZIP code", "city": "city name", "state": "2-letter state code" }
 }
 
-If a field has no data in the document, use an empty array (never omit the key). Dates must be ISO format YYYY-MM-DD; if you can't determine an exact date, skip that entry rather than guessing.`;
+If a field has no data in the document, use an empty array (never omit the key). Dates must be ISO format YYYY-MM-DD; if you can't determine an exact date, skip that entry rather than guessing. For "location", look for any address block — child's home address, school letterhead, clinic address, or meeting location. If you find a ZIP code, include it. Omit "location" entirely (do not include the key) if no address information is present in the document.`;
 
 export async function extractDocumentData(params: {
   base64: string;
