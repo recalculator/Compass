@@ -14,11 +14,13 @@ type Status = 'loading' | 'done' | 'error';
 
 export function BenefitsSearch({
   locationState,
+  zipCode,
   diagnoses,
   childAge,
   currentServices,
 }: {
   locationState: string;
+  zipCode?: string;
   diagnoses: string[];
   childAge?: number;
   currentServices?: string[];
@@ -40,7 +42,7 @@ export function BenefitsSearch({
       const res = await fetch('/api/search/benefits', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ state: locationState, diagnoses, childAge, currentServices }),
+        body: JSON.stringify({ state: locationState, zipCode, diagnoses, childAge, currentServices }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? 'Search failed');

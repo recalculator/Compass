@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentChild } from '@/lib/child/getCurrentChild';
 import type { SpecialtyType } from '@/lib/types';
-import { LiveSearch } from '@/components/directory/LiveSearch';
 import { DirectoryLiveSearch } from '@/components/directory/DirectoryLiveSearch';
 import { DirectorySave, DirectoryRestore } from '@/components/directory/DirectoryPersistence';
 import { SavedTab } from '@/components/directory/SavedTab';
@@ -67,11 +66,6 @@ export default async function SpecialistsPage({
     savedMap[s.name] = s.id;
   }
 
-  const showPersonalized =
-    profile &&
-    profile.diagnosis &&
-    profile.diagnosis.length > 0 &&
-    profile.location_zip;
 
   const childSpecialtyOptions = specialtiesForDiagnoses(profile?.diagnosis ?? []);
   const savedCount = savedSpecialists?.length ?? 0;
@@ -123,20 +117,7 @@ export default async function SpecialistsPage({
 
       {tab === 'find' && (
         <>
-          {showPersonalized ? (
-            <LiveSearch
-              childName={profile.child_name}
-              diagnoses={profile.diagnosis!}
-              zipCode={profile.location_zip!}
-              savedMap={savedMap}
-            />
-          ) : (
-            <div className="card mt-6 text-sm text-sage-500">
-              Complete your child&apos;s profile (diagnosis + ZIP code) to see personalized recommendations.
-            </div>
-          )}
-
-          <h2 className="mt-10 text-lg font-semibold text-sage-900">Search all specialists</h2>
+          <h2 className="text-lg font-semibold text-sage-900">Search all specialists</h2>
 
           <form className="card mt-3 grid gap-4 sm:grid-cols-2" method="get">
             <div>

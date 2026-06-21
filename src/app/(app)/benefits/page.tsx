@@ -84,6 +84,7 @@ export default async function BenefitsPage({
           {hasProfile ? (
             <BenefitsSearch
               locationState={profile.location_state!}
+              zipCode={profile.location_zip ?? undefined}
               diagnoses={profile.diagnosis!}
               childAge={childAge}
               currentServices={profile.current_services ?? undefined}

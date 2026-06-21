@@ -49,9 +49,9 @@ export async function findBenefits(
   supabase: SupabaseClient,
   state: string,
   diagnoses: string[],
-  options: { childAge?: number; currentServices?: string[] } = {},
+  options: { zipCode?: string; childAge?: number; currentServices?: string[] } = {},
 ): Promise<BenefitResult[]> {
-  const { childAge, currentServices } = options;
+  const { zipCode, childAge, currentServices } = options;
   const stateCode = state.toUpperCase();
   const diagnosisTag = normalizeDiagnosisTag(diagnoses, childAge, currentServices);
   const cutoff = new Date(Date.now() - CACHE_DAYS * 24 * 60 * 60 * 1000).toISOString();
@@ -108,19 +108,23 @@ export async function findBenefits(
 
     console.log(`[Stagehand] Searching for "${diagnosisLabel}" benefits in ${stateName}`);
 
+    const locationInput = zipCode ?? stateName;
+
     const agent = stagehand.agent();
     await withRetry(
       () =>
         agent.execute({
           instruction:
             `Go to https://www.findhelp.org. ` +
-            `Use the location field to enter "${stateName}" as the location. ` +
-            `Then search for programs related to: ${diagnosisLabel}${ageContext}.${servicesContext} ` +
-            `Look for disability support programs, Medicaid waivers, state developmental disability services, ` +
-            `early intervention programs, SSI, and any financial or therapeutic assistance for families — ` +
-            `favor listings that are about disability/developmental/medical support over plain food or housing aid. ` +
-            `Scroll to find at least 8 program listings.`,
-          maxSteps: 10,
+            `Type "${diagnosisLabel}" into the main search/needs box, and type "${locationInput}" into the location field ` +
+            `(if "${locationInput}" isn't accepted, try "${stateName}" instead, or just the zip/city alone). ` +
+            `Submit the search (click the search/"Find Programs" button, or press Enter). ` +
+            `Wait for the results page to actually load with individual program listing cards — do not stop on the homepage ` +
+            `or an empty results page. If no results appear, try removing words from the search term and search again. ` +
+            `Once real program listings are visible, scroll to load at least 8 of them. ` +
+            `Favor listings about disability support, Medicaid waivers, developmental disability services, ` +
+            `early intervention, SSI, or therapeutic/financial assistance for families${ageContext} over plain food or housing aid.${servicesContext}`,
+          maxSteps: 14,
         }),
       { label: 'benefits agent.execute' },
     );
@@ -129,8 +133,11 @@ export async function findBenefits(
     const data = await withRetry(
       () =>
         stagehand.extract(
-          `Extract the top 8 assistance or benefit program listings visible on the page. ` +
-            `For each, capture: ` +
+          `Extract the assistance/benefit program listings visible on the page, up to 8 of them. ` +
+            `Only extract real, individual program listings (each with its own name and details) — ` +
+            `if the page is just a search form, homepage, or empty results page with no individual program cards, ` +
+            `return an empty "programs" array. Do not invent a placeholder entry describing the lack of results. ` +
+            `For each real listing, capture: ` +
             `(1) the program's name; ` +
             `(2) a description of what it provides — be as concrete as the listing allows (specific services, dollar amounts, or hours), ` +
             `mentioning ${diagnosisLabel}${ageContext} where the listing supports it, but don't invent specifics the listing doesn't state; ` +
@@ -141,26 +148,33 @@ export async function findBenefits(
       { label: 'benefits extract' },
     );
 
-    const results = data.programs.slice(0, 8).map((b) => ({
-      programName: b.programName,
-      description: [b.description, b.eligibility ? `Eligibility: ${b.eligibility}` : '']
-        .filter(Boolean)
-        .join(' '),
-      contactInfo: b.contactInfo ?? '',
-    }));
+    const results = data.programs
+      .filter((b) => b.programName && !/no .*(program|result|listing)/i.test(b.programName))
+      .slice(0, 8)
+      .map((b) => ({
+        programName: b.programName,
+        description: [b.description, b.eligibility ? `Eligibility: ${b.eligibility}` : '']
+          .filter(Boolean)
+          .join(' '),
+        contactInfo: b.contactInfo ?? '',
+      }));
 
-    if (results.length > 0) {
-      await supabase.from('browserbase_benefits').insert(
-        results.map((b) => ({
-          state_code: stateCode,
-          diagnosis_tag: diagnosisTag,
-          program_name: b.programName,
-          description: b.description || null,
-          contact_info: b.contactInfo || null,
-          source: 'browserbase',
-        })),
+    if (results.length === 0) {
+      throw new Error(
+        `Couldn't find specific program listings for ${stateName} right now — please try again.`,
       );
     }
+
+    await supabase.from('browserbase_benefits').insert(
+      results.map((b) => ({
+        state_code: stateCode,
+        diagnosis_tag: diagnosisTag,
+        program_name: b.programName,
+        description: b.description || null,
+        contact_info: b.contactInfo || null,
+        source: 'browserbase',
+      })),
+    );
 
     return results;
   } finally {

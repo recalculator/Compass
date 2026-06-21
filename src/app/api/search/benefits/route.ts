@@ -7,6 +7,7 @@ export const maxDuration = 300;
 
 const RequestSchema = z.object({
   state: z.string().min(2).max(2),
+  zipCode: z.string().min(5).max(5).optional(),
   diagnoses: z.array(z.string().min(1)).min(1),
   childAge: z.number().int().min(0).max(25).optional(),
   currentServices: z.array(z.string()).optional(),
@@ -23,11 +24,11 @@ export async function POST(request: Request) {
     );
   }
 
-  const { state, diagnoses, childAge, currentServices } = parsed.data;
+  const { state, zipCode, diagnoses, childAge, currentServices } = parsed.data;
 
   try {
     const supabase = createServiceRoleClient();
-    const benefits = await findBenefits(supabase, state, diagnoses, { childAge, currentServices });
+    const benefits = await findBenefits(supabase, state, diagnoses, { zipCode, childAge, currentServices });
     return NextResponse.json({ benefits });
   } catch (err) {
     console.error('[/api/search/benefits]', err);
