@@ -20,7 +20,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  const expertCallRequestId: string | undefined = message.call?.metadata?.expertCallRequestId;
+  // The web SDK's vapi.start(assistantId, { metadata }) call actually lands
+  // the value under call.assistantOverrides.metadata, not call.metadata —
+  // confirmed against a real call via the Vapi API. Check both.
+  const expertCallRequestId: string | undefined =
+    message.call?.metadata?.expertCallRequestId ??
+    message.call?.assistantOverrides?.metadata?.expertCallRequestId;
   const summary: string | undefined = message.analysis?.summary;
 
   if (!expertCallRequestId || !summary) {
