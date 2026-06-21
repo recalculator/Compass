@@ -54,7 +54,16 @@ export default async function PostPage({ params }: { params: { id: string } }) {
         </div>
         <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-sage-700">{post.body}</p>
         <div className="mt-3 flex items-center justify-between">
-          <p className="text-xs text-sage-400">— {author?.full_name ?? 'A parent'}</p>
+          <p className="text-xs text-sage-400">
+            —{' '}
+            {!isOwnPost && author ? (
+              <Link href={`/village/messages/${author.id}`} className="hover:underline">
+                {author.full_name}
+              </Link>
+            ) : (
+              author?.full_name ?? 'A parent'
+            )}
+          </p>
           {!isOwnPost && author && (
             <Link
               href={`/village/messages/${author.id}`}

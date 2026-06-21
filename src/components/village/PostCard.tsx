@@ -52,7 +52,16 @@ export function PostCard({ post, myId }: { post: Post; myId?: string }) {
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-semibold text-sage-900">{authorName}</span>
+            {!isOwnPost && post.author ? (
+              <Link
+                href={`/village/messages/${post.author.id}`}
+                className="text-sm font-semibold text-sage-900 hover:underline"
+              >
+                {authorName}
+              </Link>
+            ) : (
+              <span className="text-sm font-semibold text-sage-900">{authorName}</span>
+            )}
             <span className="text-xs text-sage-400">{relativeTime(post.created_at)}</span>
             <Badge variant="sky">{TOPIC_LABELS[post.topic as CommunityTopic] ?? post.topic}</Badge>
           </div>
