@@ -1,6 +1,7 @@
 import { Stagehand } from '@browserbasehq/stagehand';
 import { z } from 'zod';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { withRetry } from './retry';
 
 const CACHE_DAYS = 7;
 
@@ -92,23 +93,31 @@ export async function findBenefits(
     console.log(`[Stagehand] Searching for "${diagnosisLabel}" benefits in ${stateName}`);
 
     const agent = stagehand.agent();
-    await agent.execute({
-      instruction:
-        `Go to https://www.findhelp.org. ` +
-        `Search for assistance programs in ${stateName}. ` +
-        `Use the location field to enter "${stateName}" as the location. ` +
-        `Then search for programs related to: ${diagnosisLabel}. ` +
-        `Look for disability support programs, Medicaid waivers, state developmental disability services, ` +
-        `early intervention programs, SSI, and any financial or therapeutic assistance for families. ` +
-        `Scroll to find at least 8 program listings.`,
-      maxSteps: 10,
-    });
+    await withRetry(
+      () =>
+        agent.execute({
+          instruction:
+            `Go to https://www.findhelp.org. ` +
+            `Search for assistance programs in ${stateName}. ` +
+            `Use the location field to enter "${stateName}" as the location. ` +
+            `Then search for programs related to: ${diagnosisLabel}. ` +
+            `Look for disability support programs, Medicaid waivers, state developmental disability services, ` +
+            `early intervention programs, SSI, and any financial or therapeutic assistance for families. ` +
+            `Scroll to find at least 8 program listings.`,
+          maxSteps: 10,
+        }),
+      { label: 'benefits agent.execute' },
+    );
 
     console.log('[Stagehand] Extracting benefit program listings...');
-    const data = await stagehand.extract(
-      'Extract the top 8 assistance or benefit program listings visible on the page. ' +
-        'For each, capture: program name, description of what it provides, and contact information (phone, website, or address).',
-      BenefitsSchema,
+    const data = await withRetry(
+      () =>
+        stagehand.extract(
+          'Extract the top 8 assistance or benefit program listings visible on the page. ' +
+            'For each, capture: program name, description of what it provides, and contact information (phone, website, or address).',
+          BenefitsSchema,
+        ),
+      { label: 'benefits extract' },
     );
 
     const results = data.programs.slice(0, 8);

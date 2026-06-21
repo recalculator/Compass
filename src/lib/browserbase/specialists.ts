@@ -1,6 +1,7 @@
 import { Stagehand } from '@browserbasehq/stagehand';
 import { z } from 'zod';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { withRetry } from './retry';
 
 const CACHE_DAYS = 7;
 
@@ -122,26 +123,34 @@ export async function findSpecialists(
     );
 
     const agent = stagehand.agent();
-    await agent.execute({
-      instruction: isAll
-        ? `Go to https://www.psychologytoday.com/us/therapists. ` +
-          `Enter zip code ${zipCode} in the location/near field. ` +
-          `Do not apply any specialty filter — search broadly. ` +
-          `Scroll down until at least 10 provider listings are visible on the page.`
-        : `Go to https://www.psychologytoday.com/us/therapists. ` +
-          `Search for ${specialtyType} providers near zip code ${zipCode}. ` +
-          `Use the location filter to enter the zip code. ` +
-          `Use the specialty/issue filter to narrow to ${specialtyType}. ` +
-          `Scroll until at least 5 provider listings are visible.`,
-      maxSteps: isAll ? 10 : 8,
-    });
+    await withRetry(
+      () =>
+        agent.execute({
+          instruction: isAll
+            ? `Go to https://www.psychologytoday.com/us/therapists. ` +
+              `Enter zip code ${zipCode} in the location/near field. ` +
+              `Do not apply any specialty filter — search broadly. ` +
+              `Scroll down until at least 10 provider listings are visible on the page.`
+            : `Go to https://www.psychologytoday.com/us/therapists. ` +
+              `Search for ${specialtyType} providers near zip code ${zipCode}. ` +
+              `Use the location filter to enter the zip code. ` +
+              `Use the specialty/issue filter to narrow to ${specialtyType}. ` +
+              `Scroll until at least 5 provider listings are visible.`,
+          maxSteps: isAll ? 10 : 8,
+        }),
+      { label: 'specialists agent.execute' },
+    );
 
     console.log('[Stagehand] Extracting specialist listings...');
     const extractCount = isAll ? 10 : 5;
-    const data = await stagehand.extract(
-      `Extract the top ${extractCount} specialist or therapist provider listings visible on the page. ` +
-        'For each listing capture: full provider name, phone number, office address, a brief description or bio excerpt, and the full URL to their profile page.',
-      SpecialistsSchema,
+    const data = await withRetry(
+      () =>
+        stagehand.extract(
+          `Extract the top ${extractCount} specialist or therapist provider listings visible on the page. ` +
+            'For each listing capture: full provider name, phone number, office address, a brief description or bio excerpt, and the full URL to their profile page.',
+          SpecialistsSchema,
+        ),
+      { label: 'specialists extract' },
     );
 
     const results = data.specialists.slice(0, extractCount);

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { Stagehand } from '@browserbasehq/stagehand';
 import { requireUser } from '@/lib/auth/requireUser';
 import { getCurrentChild } from '@/lib/child/getCurrentChild';
+import { withRetry } from '@/lib/browserbase/retry';
 
 export const maxDuration = 300;
 
@@ -53,27 +54,31 @@ export async function POST(request: Request) {
 
       const isSearchPage = profileUrl.includes('/therapists?query=');
       const agent = stagehand.agent();
-      await agent.execute({
-        instruction: isSearchPage
-          ? `Go to ${profileUrl}. ` +
-            `Find the listing for "${specialistName}" in the search results and click on their name to open their profile. ` +
-            `On their profile, find the appointment request or contact form (look for "Email ${specialistName}", "Request Appointment", or "Contact" button). ` +
-            `Fill in the form with: ` +
-            `Name: ${user.email?.split('@')[0] ?? 'Parent'}, ` +
-            `Email: ${user.email}, ` +
-            `Phone: ${parentPhone}, ` +
-            `Message: "${reason}". ` +
-            `Submit the form. Stop if you encounter a CAPTCHA or login wall.`
-          : `Go to ${profileUrl}. ` +
-            `Find the appointment request or contact form (look for "Email ${specialistName}", "Request Appointment", or "Contact" button). ` +
-            `Fill in the form with: ` +
-            `Name: ${user.email?.split('@')[0] ?? 'Parent'}, ` +
-            `Email: ${user.email}, ` +
-            `Phone: ${parentPhone}, ` +
-            `Message: "${reason}". ` +
-            `Submit the form. Stop if you encounter a CAPTCHA or login wall.`,
-        maxSteps: 12,
-      });
+      await withRetry(
+        () =>
+          agent.execute({
+            instruction: isSearchPage
+              ? `Go to ${profileUrl}. ` +
+                `Find the listing for "${specialistName}" in the search results and click on their name to open their profile. ` +
+                `On their profile, find the appointment request or contact form (look for "Email ${specialistName}", "Request Appointment", or "Contact" button). ` +
+                `Fill in the form with: ` +
+                `Name: ${user.email?.split('@')[0] ?? 'Parent'}, ` +
+                `Email: ${user.email}, ` +
+                `Phone: ${parentPhone}, ` +
+                `Message: "${reason}". ` +
+                `Submit the form. Stop if you encounter a CAPTCHA or login wall.`
+              : `Go to ${profileUrl}. ` +
+                `Find the appointment request or contact form (look for "Email ${specialistName}", "Request Appointment", or "Contact" button). ` +
+                `Fill in the form with: ` +
+                `Name: ${user.email?.split('@')[0] ?? 'Parent'}, ` +
+                `Email: ${user.email}, ` +
+                `Phone: ${parentPhone}, ` +
+                `Message: "${reason}". ` +
+                `Submit the form. Stop if you encounter a CAPTCHA or login wall.`,
+            maxSteps: 12,
+          }),
+        { label: 'book-appointment agent.execute' },
+      );
 
       return NextResponse.json({ success: true, message: 'Appointment request submitted.' });
     } finally {
