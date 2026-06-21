@@ -70,7 +70,10 @@ const patch = {
   analysisPlan: {
     summaryPlan: {
       enabled: true,
-      messages: [{ role: 'system', content: summaryPrompt }],
+      messages: [
+        { role: 'system', content: summaryPrompt },
+        { role: 'user', content: 'Here is the transcript:\n\n{{transcript}}\n\nHere is the ended reason of the call:\n\n{{endedReason}}\n\n' },
+      ],
     },
   },
   serverUrl: `${siteUrl}/api/vapi/webhook`,
