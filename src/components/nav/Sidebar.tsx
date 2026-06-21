@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Map, Search, Users, HandCoins, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Map, Search, Users, HandCoins, Phone, Settings, LogOut } from 'lucide-react';
 import clsx from 'clsx';
 import { Logo } from '@/components/ui/Logo';
 
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: '/specialists', label: 'Specialists', icon: Search },
   { href: '/benefits', label: 'Benefit Finder', icon: HandCoins },
   { href: '/village', label: 'Village', icon: Users },
+  { href: '/connect', label: 'Connect', icon: Phone },
   { href: '/dashboard/settings', label: 'Settings', icon: Settings },
 ];
 
