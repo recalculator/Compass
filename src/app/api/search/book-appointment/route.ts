@@ -42,6 +42,10 @@ export async function POST(request: Request) {
       projectId,
       model: 'anthropic/claude-sonnet-4-6',
       verbose: 1,
+      // pino-pretty's worker-thread transport doesn't survive Vercel's
+      // serverless bundling ("unable to determine transport target") — use
+      // plain logging instead.
+      disablePino: true,
     });
 
     try {

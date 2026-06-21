@@ -74,7 +74,17 @@ export async function findBenefits(
   const stateName = STATE_NAMES[stateCode] ?? state;
   const diagnosisLabel = diagnoses.join(', ');
 
-  const stagehand = new Stagehand({ env: 'BROWSERBASE', apiKey, projectId, model: 'anthropic/claude-sonnet-4-6', verbose: 1 });
+  const stagehand = new Stagehand({
+    env: 'BROWSERBASE',
+    apiKey,
+    projectId,
+    model: 'anthropic/claude-sonnet-4-6',
+    verbose: 1,
+    // pino-pretty's worker-thread transport doesn't survive Vercel's
+    // serverless bundling ("unable to determine transport target") — use
+    // plain logging instead.
+    disablePino: true,
+  });
 
   try {
     await stagehand.init();
